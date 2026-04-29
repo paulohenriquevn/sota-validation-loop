@@ -47,14 +47,15 @@ Apply a targeted fix using TDD.
 
 1. Read the gap analysis from Phase 2
 2. Formulate ONE hypothesis (not multiple)
-3. **HUMAN GATE**: Before modifying code, explain the hypothesis and ask for approval
-4. Apply TDD:
+3. Apply the fix immediately using TDD:
    - RED: Write test that proves the feature is broken
    - GREEN: Write minimum code to make it pass
    - REFACTOR: Clean up
-5. Verify: `cargo test -p <crate>` + `cargo clippy`
+4. Verify: `cargo test -p <crate>` + `cargo clippy`
+5. If tests fail or clippy warns → revert and try different approach
 6. **NEVER** modify: allowlists, CLAUDE.md, Makefile, gate scripts
 7. When done: `<!-- PHASE_3_COMPLETE -->`
+8. **Safety net**: Phase 4 (validate) will revert if regressions detected
 
 ### Phase 4: VALIDATE
 
@@ -102,10 +103,11 @@ Emit after each phase:
 1. **Read state file FIRST** — every iteration starts by reading current phase
 2. **One fix per cycle** — don't fix multiple things at once
 3. **Evidence over speculation** — every claim backed by probe data
-4. **Human gate for code changes** — ask before modifying production code
-5. **Budget awareness** — track cost, stop if budget exceeded
+4. **Fully autonomous** — apply fixes, test, keep/discard without asking. Phase 4 reverts regressions automatically.
+5. **Never stop to ask** — if unsure, try the fix and let keep/discard decide. The loop is the safety net.
 6. **Forbidden paths** — NEVER touch allowlists, CLAUDE.md, Makefile
 7. **TDD inviolable** — RED before GREEN, always
+8. **Shift targets when stuck** — if a component is not the bottleneck, move to the next worst gap. Never repeat the same fix twice.
 
 ## Markers Reference
 
