@@ -14,9 +14,9 @@ TEMPLATE="${PLUGIN_ROOT}/templates/sota-prompt.md"
 # Default values
 THRESHOLDS_PATH="docs/sota-thresholds.toml"
 REGISTRY_PATH="docs/feature-registry.toml"
-MAX_CYCLES=5
-MAX_ITERATIONS=30
-BUDGET=50
+MAX_CYCLES=500
+MAX_ITERATIONS=10000
+BUDGET=0
 OUTPUT_DIR="./sota-output"
 COMPLETION_PROMISE=""
 
