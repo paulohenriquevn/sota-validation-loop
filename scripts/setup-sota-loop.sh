@@ -73,8 +73,8 @@ for section, values in data.items():
 print(count)
 " 2>/dev/null || echo "0")
 
-# Create output directory
-mkdir -p "$OUTPUT_DIR"/{reports,state,analysis}
+# Create output directory structure
+mkdir -p "$OUTPUT_DIR"/{research,probes,analysis,baselines,progress,report,state}
 mkdir -p .claude
 
 # Create state file with prompt
@@ -84,8 +84,8 @@ cat > "$STATE_FILE" << EOF
 ---
 active: true
 topic: "SOTA Validation and Refinement"
-current_phase: 1
-phase_name: "probe"
+current_phase: 0
+phase_name: "research"
 phase_iteration: 1
 global_iteration: 1
 max_global_iterations: $MAX_ITERATIONS

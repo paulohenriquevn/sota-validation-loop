@@ -17,6 +17,10 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/setup-sota-loop.sh" $ARGUMENTS
 
 🔄 SOTA validation loop activated in this session!
 
+The loop starts at **Phase 0: RESEARCH** — deep research to verify thresholds
+are actually SOTA before any validation begins. Then proceeds through:
+Phase 1 (PROBE) → Phase 2 (ANALYZE) → Phase 3 (REFINE) → Phase 4 (VALIDATE) → Phase 5 (REPORT)
+
 The stop hook is now active. When you try to exit, the SAME PROMPT will be
 fed back to you. You'll see your previous work in files, creating a
 self-referential loop where you iteratively improve features until all

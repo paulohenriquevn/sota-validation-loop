@@ -11,24 +11,27 @@ allowed-tools: Read
 
 Autonomous loop that validates ALL features of your project against evidence-based SOTA thresholds. It:
 
-1. **Probes** every feature (tools, CLI commands, providers, languages, runtime phases)
-2. **Analyzes** results to identify the weakest component
-3. **Refines** the weakest feature with targeted improvements
-4. **Validates** that the improvement worked (keep/discard)
-5. **Reports** final state with pass/fail per feature
+0. **Researches** current state-of-the-art — verifies thresholds are fresh
+1. **Probes** every feature using deterministic probe scripts
+2. **Analyzes** results with weighted scoring to identify the worst gap
+3. **Refines** the weakest feature with targeted TDD improvements
+4. **Validates** using persisted baselines — keep/discard with deterministic rollback
+5. **Reports** final state with progress history and stall analysis
 
-Iterates until all dod-gates pass or max cycles reached.
+Iterates until all dod-gates pass, stall detected, or max cycles reached.
 
-## 5-Phase State Machine
+## 6-Phase State Machine
 
 ```
-Phase 1: PROBE    → Run E2E probes against feature registry
-Phase 2: ANALYZE  → Compare against thresholds, identify worst gap
-Phase 3: REFINE   → Propose and apply targeted fix (human-gated)
-Phase 4: VALIDATE → Rerun probes, compare before/after, keep or discard
-Phase 5: REPORT   → Final report with pass/fail per feature
+Phase 0: RESEARCH  → Deep SOTA research, update thresholds with fresh evidence
+Phase 1: PROBE     → Run deterministic probe scripts + manual probes
+Phase 2: ANALYZE   → Weighted scoring algorithm, root cause at file:line
+Phase 3: REFINE    → Validated hypothesis + TDD fix (baseline auto-saved)
+Phase 4: VALIDATE  → Compare against baseline, DISCARD → git rollback
+Phase 5: REPORT    → Final report with progress trends
 
 Loop-back: If features still failing → return to Phase 1
+Stop: All pass, stall detected, budget exhausted, or max cycles
 ```
 
 ## Commands
@@ -46,26 +49,49 @@ Loop-back: If features still failing → return to Phase 1
 /sota-loop [OPTIONS]
   --thresholds PATH      Path to TOML thresholds (default: docs/sota-thresholds.toml)
   --registry PATH        Path to feature registry (default: docs/feature-registry.toml)
-  --max-cycles N         Max refinement cycles (default: 5)
-  --budget N             Max USD budget (default: 50)
+  --max-cycles N         Max refinement cycles (default: 500)
+  --max-iterations N     Hard iteration cap (default: 10000)
+  --budget N             Max USD budget (default: unlimited)
   --completion-done TEXT  Promise text that terminates the loop
 ```
 
 ## Key Principles
 
+- **Deep Research**: Phase 0 ensures thresholds are actually SOTA, not stale
+- **Deterministic probes**: `scripts/probe-runner.sh` — repeatable, not ad-hoc
+- **Weighted scoring**: Gap analysis uses concrete 40%/30%/20%/10% weights
+- **Validated hypotheses**: File paths verified via `ls`/`grep` before proposing
+- **Deterministic rollback**: `<!-- DISCARD -->` → `git checkout` via hook
+- **Baseline persistence**: JSON snapshots for accurate before/after comparison
+- **Stall detection**: No progress for 2 cycles → auto-stop
 - **Evidence-based**: Every threshold cites a research paper or internal benchmark
-- **Feature-granular**: Validates per-tool, per-provider, per-language — not just aggregates
-- **Keep/discard**: Changes that don't improve metrics are automatically reverted
-- **Human-gated**: Code changes require explicit approval before merge
-- **Budget-capped**: Hard USD limit prevents runaway costs
 
-## Agents (8 specialists)
+## Agents (9 specialists)
 
-1. **e2e-prober** — Runs probes against feature registry
-2. **gap-analyzer** — Identifies worst-performing feature
-3. **hypothesis-generator** — Proposes targeted improvement
-4. **implementation-coder** — Applies fix with TDD
-5. **validation-runner** — Retests and compares
-6. **quality-evaluator** — Keep/discard gate (threshold 0.7)
-7. **report-writer** — Final pass/fail report
-8. **chief-validator** — Orchestrates, conducts meetings, decides loop-back
+1. **sota-researcher** — Phase 0: Deep SOTA research, threshold verification
+2. **e2e-prober** — Phase 1: Runs deterministic probe scripts
+3. **gap-analyzer** — Phase 2: Weighted scoring, root cause at file:line
+4. **hypothesis-generator** — Phase 3: Validated hypothesis with path checks
+5. **implementation-coder** — Phase 3: Applies fix with strict TDD
+6. **validation-runner** — Phase 4: Baseline comparison, DISCARD marker
+7. **quality-evaluator** — Gates: Scores phases with verification commands
+8. **report-writer** — Phase 5: Final report with progress trends
+9. **chief-validator** — Orchestrator: meetings, strategy, loop-back/stop
+
+## Output Structure
+
+```
+sota-output/
+├── research/     # Phase 0 research reports
+├── probes/       # Deterministic probe JSON results
+├── analysis/     # Phase 2 gap analysis
+├── baselines/    # Pre-fix snapshots
+├── progress/     # history.jsonl (every iteration)
+└── report/       # Final validation report
+```
+
+## Tests
+
+```bash
+bash tests/test-hook-logic.sh  # 53 tests
+```
