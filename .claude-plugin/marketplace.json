@@ -1,0 +1,8 @@
+{
+  "$schema": "@anthropic.com/claude-code/marketplace.schema.json",
+  "name": "sota-validation-loop",
+  "displayName": "SOTA Validation Loop",
+  "description": "Autonomous loop that validates existing features against SOTA thresholds, identifies the weakest component, proposes improvements, retests, and keeps or discards — iterating until all gates pass.",
+  "category": "quality",
+  "tags": ["benchmark", "validation", "refinement", "quality-gates", "keep-discard"]
+}

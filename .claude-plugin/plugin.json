@@ -1,0 +1,9 @@
+{
+  "name": "sota-validation-loop",
+  "version": "1.0.0",
+  "description": "Autonomous SOTA validation and refinement loop for AI coding agents. Validates features against evidence-based thresholds, identifies gaps, proposes improvements, and iterates with keep/discard pattern until SOTA.",
+  "author": "usetheo",
+  "repository": "https://github.com/usetheo/sota-validation-loop",
+  "license": "MIT",
+  "keywords": ["sota", "validation", "benchmark", "refinement", "keep-discard", "quality-gates"]
+}

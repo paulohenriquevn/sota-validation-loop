@@ -9,7 +9,7 @@ iterates with keep/discard pattern until all quality gates pass.
 ```bash
 claude install /path/to/sota-validation-loop
 # or
-claude install github:usetheo/sota-validation-loop
+claude install paulohenriquevn/sota-validation-loop
 ```
 
 ## Prerequisites
