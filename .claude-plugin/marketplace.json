@@ -1,8 +1,26 @@
 {
-  "$schema": "@anthropic.com/claude-code/marketplace.schema.json",
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "sota-validation-loop",
-  "displayName": "SOTA Validation Loop",
-  "description": "Autonomous loop that validates existing features against SOTA thresholds, identifies the weakest component, proposes improvements, retests, and keeps or discards — iterating until all gates pass.",
-  "category": "quality",
-  "tags": ["benchmark", "validation", "refinement", "quality-gates", "keep-discard"]
+  "version": "1.0.0",
+  "description": "Autonomous SOTA validation and refinement loop for AI coding agents.",
+  "owner": {
+    "name": "paulohenriquevn",
+    "email": "paulohenriquevn@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "sota-validation-loop",
+      "description": "Autonomous loop that validates ALL features against evidence-based SOTA thresholds. 5-phase pipeline (probe, analyze, refine, validate, report) with quality gates, keep/discard pattern, and loop-back for iterative improvement.",
+      "source": {
+        "source": "github",
+        "repo": "paulohenriquevn/sota-validation-loop"
+      },
+      "version": "1.0.0",
+      "author": {
+        "name": "Paulo",
+        "email": "paulohenriquevn@gmail.com"
+      },
+      "category": "quality"
+    }
+  ]
 }
