@@ -59,6 +59,19 @@ For the TOP scored feature:
 4. **Check git history**: `git log --oneline -5 -- <file>` to see recent changes
 5. **Verify paths exist**: `ls -la <recommended_file>` before writing recommendation
 
+## Handling Missing Features
+
+When a feature has status `untested` or `fail` because the CODE DOES NOT EXIST:
+- This is NOT a skip — it is the HIGHEST priority gap.
+- The hypothesis must propose CREATING the code, not waiting.
+- Read the relevant reference repos to find HOW to implement:
+  - Memory → `referencias/hermes-agent/agent/memory_provider.py`, `docs/pesquisas/agent-memory-plan.md`
+  - Routing → `referencias/hermes-agent/agent/smart_model_routing.py`, `docs/pesquisas/smart-model-routing.md`
+  - Sub-agents → `referencias/opendev/crates/`, `docs/pesquisas/sota-subagent-architectures.md`
+  - Tools → `referencias/opendev/`, `referencias/hermes-agent/tools/`
+  - Workflows → `../theo/referencias/get-shit-done/`, `../theo/referencias/superpowers/`
+- **Adapt the pattern to Rust** following SOLID/DRY/KISS principles.
+
 ## Output
 
 ```markdown
@@ -72,11 +85,12 @@ For the TOP scored feature:
 
 ### Worst Gap (Rank 1)
 - **Feature**: memory.meta_memory_engine
-- **Status**: FAIL
+- **Status**: FAIL (code does not exist)
 - **Probe result**: `{output_dir}/probes/memory.meta_memory_engine.json`
 - **Error**: MemoryEngine trait not found in theo-application
-- **Root cause**: File `crates/theo-application/src/memory/engine.rs` does not exist (RM1 not started)
-- **Fix target**: `crates/theo-application/src/memory/engine.rs` (create)
+- **Root cause**: `crates/theo-application/src/memory/engine.rs` does not exist — RM1 not started
+- **Reference pattern**: `referencias/hermes-agent/agent/memory_manager.py:83-374` (fan-out, error isolation)
+- **Fix target**: CREATE `crates/theo-application/src/memory/engine.rs`
 - **Expected impact**: Unblocks memory.provider_error_isolation DOD-gate
 - **Confidence**: 0.85
 - **Verified**: `ls crates/theo-application/src/memory/` — directory exists: YES/NO

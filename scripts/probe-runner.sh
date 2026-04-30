@@ -232,12 +232,15 @@ probe_languages() {
 }
 
 # ============================================================================
-# CATEGORY: CONTEXT ENGINE (theo-engine-retrieval + graph + parser)
+# CATEGORY: CONTEXT ENGINE (theo-engine-retrieval — graph-augmented agentic retrieval)
+# Objective: Structural intelligence derived FROM code, exposed as tool backends
+# Ref: crates/theo-engine-retrieval/README.md
+# Ref: docs/pesquisas/context/code-retrieval-deep-research.md (963 lines, 68 sources)
 # ============================================================================
 probe_context() {
-  echo "=== CONTEXT ENGINE (theo-engine-retrieval, graph, parser) ==="
+  echo "=== CONTEXT ENGINE (theo-engine-retrieval — graph-augmented retrieval) ==="
 
-  # Test suites for all 3 engine crates
+  # --- Test suites ---
   run_probe "context.retrieval_tests" \
     "cargo test -p theo-engine-retrieval --lib --tests --no-fail-fast 2>&1" \
     "test result: ok"
@@ -246,27 +249,96 @@ probe_context() {
     "cargo test -p theo-engine-graph --lib --tests --no-fail-fast 2>&1" \
     "test result: ok"
 
-  # Check RRF fusion implementation
-  run_probe "context.rrf_fusion_impl" \
-    "grep -rn 'rrf\|reciprocal_rank\|RRF' crates/theo-engine-retrieval/src/ 2>/dev/null | head -1" \
+  # --- Search layer ---
+
+  # BM25F with code-aware tokenization
+  run_probe "context.bm25_code_aware" \
+    "grep -rn 'FileBm25\|fn search' crates/theo-engine-retrieval/src/search/file_bm25.rs 2>/dev/null | head -1" \
     "."
 
-  # Check tantivy (BM25) integration
-  run_probe "context.tantivy_dep" \
-    "grep 'tantivy' crates/theo-engine-retrieval/Cargo.toml 2>/dev/null" \
-    "tantivy"
-
-  # Check context assembly function
-  run_probe "context.assembly_exists" \
-    "grep -rn 'fn.*assemble\|fn.*context.*assembly\|ContextAssembly' crates/theo-engine-retrieval/src/ 2>/dev/null | head -1" \
+  # Dense search with embedding model
+  run_probe "context.dense_search" \
+    "grep -rn 'FileDenseSearch\|NeuralEmbedder' crates/theo-engine-retrieval/src/dense_search.rs crates/theo-engine-retrieval/src/embedding/neural.rs 2>/dev/null | head -1" \
     "."
 
-  # Check graph clustering
-  run_probe "context.clustering_exists" \
-    "grep -rn 'cluster\|Cluster' crates/theo-engine-graph/src/ 2>/dev/null | head -1" \
+  # P0 CHECK: Which embedding model is used? (AllMiniLM = BAD, Jina/Voyage = GOOD)
+  run_probe "context.embedding_model_check" \
+    "grep -rn 'AllMiniLM\|all-MiniLM\|jina.*code\|voyage.*code\|qodo.*embed' crates/theo-engine-retrieval/src/embedding/neural.rs 2>/dev/null | head -3" \
     "."
 
-  # Clippy clean for all engine crates
+  # Query type routing
+  run_probe "context.query_type_router" \
+    "grep -rn 'QueryType\|Identifier\|NaturalLanguage\|Mixed' crates/theo-engine-retrieval/src/search/query_type.rs 2>/dev/null | head -1" \
+    "QueryType"
+
+  # --- Fusion layer ---
+
+  # RRF fusion
+  run_probe "context.rrf_fusion" \
+    "grep -rn 'hybrid_rrf\|reciprocal_rank\|rrf_k' crates/theo-engine-retrieval/src/pipeline.rs 2>/dev/null | head -1" \
+    "."
+
+  # --- Graph layer (UNIQUE competitive advantage) ---
+
+  # Graph Attention Propagation
+  run_probe "context.graph_attention" \
+    "grep -rn 'propagate_attention\|proximity_from_seeds' crates/theo-engine-retrieval/src/graph_attention.rs 2>/dev/null | head -1" \
+    "."
+
+  # PageRank on code graph
+  run_probe "context.pagerank" \
+    "grep -rn 'pagerank\|PageRank' crates/theo-engine-retrieval/src/search/signals.rs 2>/dev/null | head -1" \
+    "."
+
+  # Community detection / clustering
+  run_probe "context.community_detection" \
+    "grep -rn 'community\|Community\|cluster\|Cluster' crates/theo-engine-graph/src/ 2>/dev/null | head -1" \
+    "."
+
+  # Dependency Coverage metric (UNIQUE)
+  run_probe "context.depcov_metric" \
+    "grep -rn 'dependency_coverage\|DepCov\|dep_cov' crates/theo-engine-retrieval/src/metrics.rs 2>/dev/null | head -1" \
+    "."
+
+  # --- Reranking layer ---
+
+  # Cross-encoder reranker
+  run_probe "context.cross_encoder" \
+    "grep -rn 'CrossEncoderReranker\|fn rerank' crates/theo-engine-retrieval/src/reranker.rs 2>/dev/null | head -1" \
+    "."
+
+  # --- Assembly layer ---
+
+  # Greedy knapsack assembly
+  run_probe "context.greedy_assembly" \
+    "grep -rn 'assemble_greedy\|ContextPayload' crates/theo-engine-retrieval/src/assembly/ 2>/dev/null | head -1" \
+    "."
+
+  # Context miss detection
+  run_probe "context.miss_detection" \
+    "grep -rn 'ContextMiss\|detect_miss' crates/theo-engine-retrieval/src/escape.rs 2>/dev/null | head -1" \
+    "."
+
+  # Token budget config
+  run_probe "context.budget_config" \
+    "grep -rn 'BudgetConfig\|BudgetAllocation' crates/theo-engine-retrieval/src/budget.rs 2>/dev/null | head -1" \
+    "."
+
+  # --- Metrics layer ---
+
+  # Retrieval metrics (MRR, Recall, nDCG, MAP, DepCov)
+  run_probe "context.retrieval_metrics" \
+    "grep -rn 'RetrievalMetrics\|fn compute' crates/theo-engine-retrieval/src/metrics.rs 2>/dev/null | head -1" \
+    "."
+
+  # Benchmark suite exists
+  run_probe "context.benchmark_suite" \
+    "ls crates/theo-engine-retrieval/tests/benchmark_suite.rs 2>/dev/null" \
+    "benchmark_suite"
+
+  # --- Quality ---
+
+  # Clippy clean
   run_probe "context.clippy_clean" \
     "cargo clippy -p theo-engine-retrieval -p theo-engine-graph -p theo-engine-parser -- -D warnings 2>&1" \
     ""
@@ -527,6 +599,82 @@ probe_quality_gates() {
 }
 
 # ============================================================================
+# CATEGORY: WIKI SYSTEM (for HUMANS to understand codebases)
+# Contract: HUMAN=reader, WIKI_AGENT=writer (background sub-agent)
+# Architecture: Skeleton (tree-sitter) + Enrichment (LLM via Wiki Agent)
+# ============================================================================
+probe_wiki() {
+  echo "=== WIKI SYSTEM (theo-engine-wiki — wiki for humans, maintained by Wiki Agent) ==="
+
+  # --- theo-engine-wiki crate (NEW) ---
+
+  run_probe "wiki.crate_compiles" \
+    "cargo check -p theo-engine-wiki 2>&1" \
+    ""
+
+  run_probe "wiki.crate_tests" \
+    "cargo test -p theo-engine-wiki --no-fail-fast 2>&1" \
+    "test result: ok"
+
+  run_probe "wiki.clippy_clean" \
+    "cargo clippy -p theo-engine-wiki -- -D warnings 2>&1" \
+    ""
+
+  # Core modules exist
+  run_probe "wiki.page_module" \
+    "grep -rn 'pub struct WikiPage' crates/theo-engine-wiki/src/page.rs 2>/dev/null | head -1" \
+    "WikiPage"
+
+  run_probe "wiki.skeleton_module" \
+    "grep -rn 'pub fn extract_skeleton\|pub struct SkeletonData' crates/theo-engine-wiki/src/skeleton.rs 2>/dev/null | head -1" \
+    "."
+
+  run_probe "wiki.store_module" \
+    "grep -rn 'pub struct WikiStore' crates/theo-engine-wiki/src/store.rs 2>/dev/null | head -1" \
+    "WikiStore"
+
+  run_probe "wiki.hash_module" \
+    "grep -rn 'pub struct HashManifest' crates/theo-engine-wiki/src/hash.rs 2>/dev/null | head -1" \
+    "HashManifest"
+
+  run_probe "wiki.lint_module" \
+    "grep -rn 'pub fn lint_pages' crates/theo-engine-wiki/src/lint.rs 2>/dev/null | head -1" \
+    "lint_pages"
+
+  run_probe "wiki.enrichment_struct" \
+    "grep -rn 'pub struct EnrichmentData' crates/theo-engine-wiki/src/page.rs 2>/dev/null | head -1" \
+    "EnrichmentData"
+
+  # --- theo-domain WikiBackend trait ---
+
+  run_probe "wiki.backend_trait" \
+    "grep -rn 'trait WikiBackend' crates/theo-domain/src/wiki_backend.rs 2>/dev/null | head -1" \
+    "WikiBackend"
+
+  # --- Wiki tools in theo-tooling ---
+
+  run_probe "wiki.generate_tool" \
+    "grep -rn 'wiki.*generate\|wiki_generate\|WikiGenerate' crates/theo-tooling/src/ 2>/dev/null | head -1" \
+    "."
+
+  run_probe "wiki.query_tool" \
+    "grep -rn 'wiki.*query\|wiki_query\|WikiQuery' crates/theo-tooling/src/ 2>/dev/null | head -1" \
+    "."
+
+  # --- Wiki Agent (sub-agent in theo-agent-runtime) ---
+
+  run_probe "wiki.wiki_agent" \
+    "grep -rn 'WikiAgent\|wiki.*agent\|wiki.*sub.*agent' crates/theo-agent-runtime/src/ 2>/dev/null | head -1" \
+    "."
+
+  # --- Triggers ---
+
+  run_probe "wiki.trigger_system" \
+    "grep -rn 'wiki.*trigger\|WikiTrigger\|on_commit.*wiki' crates/theo-agent-runtime/src/ 2>/dev/null | head -1" \
+    "."
+}
+
+# ============================================================================
 # MAIN: Run selected category or all
 # ============================================================================
 echo "SOTA Probe Runner — $(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -545,6 +693,7 @@ case "$CATEGORY" in
   memory)   probe_memory ;;
   routing)  probe_routing ;;
   security) probe_security ;;
+  wiki)     probe_wiki ;;
   gates)    probe_quality_gates ;;
   all)
     probe_build
@@ -555,12 +704,13 @@ case "$CATEGORY" in
     probe_runtime
     probe_memory
     probe_routing
+    probe_wiki
     probe_security
     probe_quality_gates
     ;;
   *)
     echo "Unknown category: $CATEGORY"
-    echo "Available: build tools cli languages context runtime memory routing security gates all"
+    echo "Available: build tools cli languages context runtime memory routing wiki security gates all"
     exit 1
     ;;
 esac

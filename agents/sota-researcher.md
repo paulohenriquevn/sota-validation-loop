@@ -34,7 +34,7 @@ For EACH category, research SOTA AND map to the Theo Code crate that must evolve
 |----------|---------------------|-----------------|
 | Memory | `theo-domain`, `theo-infra-memory`, `theo-application` | MemGPT v2?, Mem0 updates?, CoALA implementations? Compare against RM0-RM5b roadmap in `docs/pesquisas/agent-memory-plan.md` |
 | Agent Loop | `theo-agent-runtime` | Ablation studies, loop patterns, SWE-Bench. Check `agent_loop.rs`, `run_engine.rs`, `compaction_stages.rs` |
-| Context Engineering | `theo-engine-retrieval`, `theo-engine-graph`, `theo-engine-parser` | Retrieval techniques, caching. Check RRF fusion, BM25 implementation |
+| Context Engineering | `theo-engine-retrieval`, `theo-engine-graph`, `theo-engine-parser` | **Graph-augmented agentic retrieval**. Read `crates/theo-engine-retrieval/README.md` FIRST. Check: embedding model (AllMiniLM is 15-25pts behind SOTA — P0 upgrade), graph attention propagation, PageRank, community detection, DepCov, RRF fusion. Research: `docs/pesquisas/context/code-retrieval-deep-research.md` (963 lines, 68 sources) |
 | Model Routing | `theo-domain`, `theo-infra-llm` | Routing papers, cost/quality. Check `model_limits.rs`, provider catalog |
 | Self-Evolution | `theo-agent-runtime` | Meta-harness, autoresearch. Check current evolution loop |
 | Prompt Engineering | `theo-agent-runtime`, `theo-tooling` | Prompting techniques, representation. Check tool schemas, system prompts |
@@ -54,10 +54,21 @@ Read the existing research in `docs/pesquisas/`:
 - `sota-subagent-architectures.md` — Sub-agent patterns (Claude Code, Codex, Cursor)
 - `effective-harnesses-for-long-running-agents.md` — Anthropic harness research
 
-Then read `referencias/INDEX.md` and for each reference repo:
+Then read `referencias/INDEX.md` and for each of the 10 AI agent reference repos:
 1. Check if the repo patterns are implemented in Theo Code crates
 2. Extract thresholds or benchmarks we should match
 3. Identify gaps between reference implementations and our crates
+
+### Step 4: Search the dev workflow references
+
+Read `../theo/referencias/` for workflow and architecture patterns:
+- **get-shit-done**: 24+ specialized agents, wave-based parallelization, context engineering
+- **superpowers**: Skill-based auto-triggering, mandatory TDD, two-stage code review
+- **opensrc**: Source code access layer for agents
+- **epinio/kubero**: Abstraction patterns, pipeline orchestration
+- **korifi**: CRD-based extensibility, API-driven configuration
+
+Extract patterns applicable to Theo Code's agent loop, sub-agent system, and tool design.
 
 ### Step 4: Search academic papers
 

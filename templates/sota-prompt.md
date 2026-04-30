@@ -22,6 +22,7 @@ crates/
 ├── theo-infra-llm               26 provider specs, streaming, retry
 ├── theo-infra-auth              OAuth PKCE, device flow, env keys
 ├── theo-infra-mcp               Model Context Protocol client
+├── theo-engine-wiki             wiki engine: skeleton + enrichment + lint + store
 ├── theo-infra-memory            memory providers (in-progress)
 ├── theo-test-memory-fixtures    fixtures for memory tests
 ├── theo-tooling                 72 production tools + registry
@@ -88,7 +89,8 @@ make check-sota-dod-quick               # SOTA DOD gates (fast)
 |-----------------|-------------------|----------------|
 | Memory | `theo-domain`, `theo-infra-memory`, `theo-application` | MemoryProvider trait, BuiltinMemory, WikiMemory, MemoryEngine |
 | Agent Loop | `theo-agent-runtime` | agent_loop.rs, run_engine.rs, compaction_stages.rs |
-| Context Engineering | `theo-engine-retrieval`, `theo-engine-graph`, `theo-engine-parser` | RRF fusion, BM25, graph clustering, 14 lang parsers |
+| Context Engineering | `theo-engine-retrieval`, `theo-engine-graph`, `theo-engine-parser` | **Graph-augmented agentic retrieval**: BM25F + Dense (upgrade AllMiniLM→code-specific) + RRF + Graph Attention + PageRank + Community Detection + DepCov. Interface: tool backends, not auto pipeline. See `crates/theo-engine-retrieval/README.md` |
+| Wiki | `theo-engine-wiki`, `theo-agent-runtime`, `theo-tooling`, `theo-domain` | **Wiki compilada por LLM para HUMANOS** (não para o agente). Wiki Agent = sub-agente background, único escritor. Triggers: git commit, ADR, tests, session end, cron. Skeleton (tree-sitter) + Enrichment (LLM). Crate: 6 módulos, 19 testes. See `crates/theo-engine-wiki/README.md` |
 | Model Routing | `theo-domain`, `theo-infra-llm`, `theo-application` | ModelRouter trait, provider specs, routing rules |
 | Tools | `theo-tooling` | 72 tool implementations, tool registry |
 | Sub-agents | `theo-agent-runtime` | subagent/mod.rs, SubAgentRole, delegation |
@@ -97,20 +99,246 @@ make check-sota-dod-quick               # SOTA DOD gates (fast)
 | Prompt Engineering | `theo-agent-runtime`, `theo-tooling` | system prompts, tool schemas |
 | Self-Evolution | `theo-agent-runtime` | self-evolution loop, acceptance gate |
 
-### Research Files (read for SOTA context)
+### Critical Module: theo-engine-retrieval
+
+This is the **code intelligence engine** — the most complex crate in the workspace.
+Read `crates/theo-engine-retrieval/README.md` before touching it.
+
+**What it is:** Graph-augmented agentic retrieval. Extracts structural intelligence
+FROM the code (never from stale docs) and exposes it as tool backends.
+
+**Architecture:**
+```
+Code → Tree-Sitter Parse → Code Graph → [BM25, Dense, Graph Attention, PageRank, Communities]
+                                              ↓
+                                    Tool backends (search, impact, context, repo_map)
+                                              ↓
+                                    LLM decides which tool to call
+```
+
+**What makes it unique (no other agent has this combination):**
+- Graph Attention Propagation — discovers transitive dependencies
+- Community Detection — groups related files into modules
+- Dependency Coverage (DepCov) — ensures context has no dependency holes
+- PageRank on code graph — identifies structurally important files
+
+**Current metrics (ALL below floor):**
+| Metric | Floor | Current | Gap |
+|--------|-------|---------|-----|
+| MRR | 0.90 | 0.695 | -22% |
+| Recall@5 | 0.92 | 0.507 | -45% |
+| nDCG@5 | 0.85 | 0.495 | -42% |
+| DepCov | 0.96 | 0.767 | -20% |
+
+**P0 action (highest impact):** Replace AllMiniLM-L6-v2 embedding model with
+a code-specific model (Jina Code v2 or Voyage Code 3). AllMiniLM is 15-25 points
+behind code-specific models on code retrieval benchmarks.
+
+**Evidence base:** `docs/pesquisas/context/code-retrieval-deep-research.md` (963 lines, 68 sources)
+
+**Key research findings:**
+- Claude Code abandoned RAG/vector DB for grep + agentic reasoning
+- BUT graph-based retrieval beats pure agentic (LocAgent 92.7% via graph, ACL 2025)
+- Aider uses PageRank on code (same approach as theo)
+- Graph-augmented hybrid is the optimal path (validated by evidence)
+- Interface should evolve from automatic pipeline to tool backends
+
+**What to evolve:**
+1. Upgrade embedding model (P0 — biggest single improvement)
+2. Expose algorithms as tool backends (search, impact, context, repo_map)
+3. Tune BM25 field boosts and PRF thresholds
+4. Improve graph attention damping and hop count
+5. Add per-language retrieval benchmarks
+
+### Critical Module: Wiki System (for HUMANS, not for the agent)
+
+Read `docs/pesquisas/wiki/INDEX.md` and `docs/pesquisas/wiki/wiki-system-sota.md` before working on wiki features.
+
+**What it is:** LLM-compiled wiki so HUMANS can understand codebases in hours, not weeks.
+The agent reads code directly — it doesn't need a wiki. HUMANS need it.
+
+**The Contract:**
+```
+HUMAN = READER     → reads, navigates, queries. Never writes.
+WIKI AGENT = WRITER → background sub-agent, activated by automatic triggers.
+                      Only writer. Keeps wiki alive without human intervention.
+MANUAL = OPTIONAL  → `theo wiki generate` forces update. Rare.
+```
+
+**Architecture: Skeleton + Enrichment**
+- **Skeleton** (tree-sitter, free): structure, files, symbols, APIs, dependencies
+- **Enrichment** (LLM via Wiki Agent): "what it does", "why it exists", "how it works", "what breaks if you change it"
+- The skeleton already exists. Enrichment is what transforms inventory into understanding.
+
+**Wiki Agent Triggers:**
+| Trigger | Action |
+|---------|--------|
+| git commit | Re-enrich affected module pages |
+| New ADR | Decision page + update module pages |
+| cargo test | Update test coverage info |
+| Session end | Ingest session insights |
+| Cron | Full lint + freshness check |
+| Manual (optional) | `theo wiki generate` — full rebuild |
+
+**What makes it unique:** No tool on the market does this. Doc generators (rustdoc) list APIs.
+AI explorers (DeepWiki, CodeSee) give superficial overviews. Nothing compiles deep understanding
+into a navigable, cross-referenced wiki with architectural decisions and invariants — and keeps
+it alive automatically via an agent.
+
+**Crate:** `theo-engine-wiki` (NEW — 6 modules, 19 tests, clippy clean):
+- `page.rs` — WikiPage: skeleton + enrichment, staleness tracking
+- `skeleton.rs` — Extract structural data from code graph (free, no LLM)
+- `store.rs` — JSON persistence, atomic write (temp+rename)
+- `hash.rs` — SHA-256 incremental (unchanged files = zero LLM calls)
+- `lint.rs` — 6 rules: missing enrichment, stale, broken links, orphans, empty sections
+- `error.rs` — Typed WikiError, never generic strings
+
+**Other crates:** `theo-agent-runtime` (Wiki Agent sub-agent + trigger system), `theo-tooling` (wiki tools), `theo-domain` (WikiBackend trait)
+
+### Research & Reference Base (MANDATORY reading)
+
+You MUST base every design decision on evidence from these sources.
+Do not invent patterns — find them in the references first.
+
+#### Research Library (`docs/pesquisas/`) — organized by domain
+
+Each domain has an `INDEX.md` with: scope, target crates, references, gaps to research.
 
 ```
 docs/pesquisas/
-├── agent-memory-sota.md              # Memory architecture research
-├── agent-memory-plan.md              # Memory implementation roadmap (RM0-RM5b)
-├── context-engine.md                 # Context engine specification
-├── harness-engineering-guide.md      # Tsinghua ablation, Stanford meta-harness
-├── smart-model-routing.md            # Model routing research
-├── sota-subagent-architectures.md    # Sub-agent patterns
-├── effective-harnesses-for-long-running-agents.md  # Anthropic harness research
-
-referencias/INDEX.md                  # 10 reference repos mapped to 14 categories
+├── memory/                   # CoALA, MemGPT, Mem0, Zep, Karpathy Wiki
+│   ├── INDEX.md              # Scope + references + gaps
+│   ├── agent-memory-sota.md  # Full SOTA report
+│   └── agent-memory-plan.md  # RM0-RM5b roadmap
+├── agent-loop/               # ReAct, doom loop, compaction, self-evolution
+│   ├── INDEX.md
+│   ├── harness-engineering-guide.md      # Tsinghua ablation
+│   ├── harness-engineering.md
+│   ├── harness-engineering-openai.md
+│   └── effective-harnesses-for-long-running-agents.md
+├── context/                  # GRAPHCTX, RRF, BM25, caching
+│   └── INDEX.md
+├── model-routing/            # FrugalGPT, RouteLLM, orchestrator-worker
+│   ├── INDEX.md
+│   ├── smart-model-routing.md
+│   └── smart-model-routing-plan.md
+├── self-evolution/           # Autodream, meta-harness, keep/discard
+│   └── INDEX.md
+├── prompt-engineering/       # Representation, tool schemas, anti-hallucination
+│   └── INDEX.md
+├── subagents/                # Claude Code, Codex, orchestrator-worker
+│   ├── INDEX.md
+│   └── sota-subagent-architectures.md
+├── security-governance/      # Sandbox, injection, permissions
+│   └── INDEX.md
+├── observability/            # Cost tracking, tracing, dashboard
+│   └── INDEX.md
+├── tools/                    # Tool design, MCP, registry
+│   └── INDEX.md
+├── cli/                      # CLI UX, subcommands
+│   ├── INDEX.md
+│   └── cli-agent-ux-research.md
+├── providers/                # 26 LLM providers, auth, streaming
+│   └── INDEX.md
+├── languages/                # Tree-Sitter, 14 grammars
+│   └── INDEX.md
+├── debug/                    # DAP, 11 debug tools (Gap 6.1 CRITICAL)
+│   └── INDEX.md
+├── wiki/                     # Wiki tools, Karpathy compiler
+│   └── INDEX.md
+├── evals/                    # Evaluation frameworks
+│   └── INDEX.md
+├── agents/                   # Agent patterns
+│   └── INDEX.md
+├── insights/                 # Validated cross-domain insights
+│   ├── insight-infrastructure-over-ai.md
+│   ├── insight-mcp-a2a-convergence.md
+│   ├── insight-model-routing-per-role.md
+│   └── insight-orchestrator-worker-dominant.md
+└── *.pdf                     # Academic papers (arXiv)
 ```
+
+**READ THE INDEX.md OF EACH DOMAIN before working on features in that domain.**
+The INDEX tells you exactly which reference repos and papers to consult.
+
+#### Reference Repos — AI Agent Patterns (`referencias/`)
+
+10 repos mapped to 14 categories in `referencias/INDEX.md`:
+
+| Repo | What to learn |
+|------|---------------|
+| **opendev** (Rust) | ReactLoop, doom-loop detection, 5 workflow slots, staged compaction, CostTracker |
+| **hermes-agent** (Python) | 58+ tools, MemoryProvider lifecycle, smart_model_routing.py, memory_tool.py security scan |
+| **pi-mono** (TypeScript) | Session tree branching, extensions/skills/themes, model-resolver |
+| **opencode** (TypeScript) | Agent system (build + plan agents), permission rules, compaction subagent |
+| **Archon** (TypeScript) | DAG workflows, git worktree isolation, per-node model overrides |
+| **rippletide** (TypeScript+Rust) | Agent evaluation CLI, Context Graph MCP, rule-based governance |
+| **llm-wiki-compiler** (TypeScript) | Karpathy Wiki reference impl: hash-based incremental, two-phase pipeline |
+| **qmd** (TypeScript) | BM25 + vector + LLM reranking (RRF fusion), AST-aware chunking |
+| **fff.nvim** (Rust+Lua) | Frecency scoring, SIMD fuzzy matching, MCP server |
+| **awesome-harness-engineering** | 400+ patterns catalog for agent harness design |
+
+#### Reference Repos — Dev Workflows (`../theo/referencias/`)
+
+| Repo | What to learn |
+|------|---------------|
+| **get-shit-done** | Spec-driven dev, 24+ agents, wave-based parallelization, context engineering |
+| **superpowers** | Skill-based auto-triggering, mandatory TDD, two-stage code review, subagent dispatch |
+| **opensrc** | Source code access layer for agents across registries |
+| **epinio** | Abstraction over complexity, one-step workflows |
+| **kubero** | Pipeline orchestration, template system, add-on architecture |
+| **korifi** | Kubernetes CRDs, API-driven configuration |
+
+### Engineering Principles (INVIOLABLE)
+
+Every line of code you write MUST follow these principles. They are not
+guidelines — they are hard rules enforced by code review and CI.
+
+#### SOLID
+- **SRP**: Each module/struct has ONE reason to change. No god objects.
+- **OCP**: New behavior via composition, not editing switch/case.
+- **LSP**: Subtypes honor the contract. No `NotImplementedError`.
+- **ISP**: Small focused traits. No bloated interfaces.
+- **DIP**: Domain defines traits, infra implements. `theo-domain → (nothing)`.
+
+#### DRY
+- Never duplicate business logic. Duplicating code is acceptable if concepts differ.
+- Rule of 3: extract abstraction only at the third occurrence.
+- Centralize constants, enums, config in `theo-domain`.
+
+#### KISS
+- Simplest solution that works. No premature abstraction.
+- If a module needs a diagram to understand, simplify it.
+- Prefer explicit over clever.
+
+#### Critério de Parada: SOTA ou Nada
+- NÃO aplique YAGNI — o objetivo é atingir nível SOTA em TODAS as features.
+- Se uma feature está abaixo do threshold SOTA, ela DEVE ser evoluída. Não importa
+  se "funciona por enquanto" — funcionar não é SOTA.
+- Pare de evoluir uma feature SOMENTE quando ela atingir o threshold definido
+  em `docs/sota-thresholds.toml`.
+- O loop NÃO para até percorrer TODO o sistema. Feature por feature, crate por
+  crate, até que todos os DOD-gates passem ou o budget acabe.
+
+#### Design Patterns (use from references, don't invent)
+- **Strategy**: `ModelRouter` trait with rule-based default (hermes pattern)
+- **Observer**: Event hooks in agent loop (`on_pre_compress`, `on_session_end`)
+- **Facade**: `theo-application` as the single entry point for apps
+- **Builder**: Config structs with cascading defaults (opendev slot pattern)
+- **Pipeline**: Compaction stages, retrieval rank fusion (RRF)
+- **Coordinator**: `MemoryEngine` fans out to providers (hermes MemoryManager)
+
+#### Error Handling
+- NEVER `unwrap()` in production. Use `thiserror` per crate.
+- Validate at boundaries (tool inputs, API responses). Trust internals.
+- Typed errors with context: `StoreFailed { key, source }`, not `"error"`.
+- Memory provider panics MUST NOT crash the agent loop (error isolation).
+
+#### Testing
+- TDD: RED → GREEN → REFACTOR. No exceptions.
+- Bug fix = regression test FIRST, then fix.
+- Deterministic, independent, fast. No flaky tests.
+- Test behavior, not implementation. AAA pattern (Arrange-Act-Assert).
 
 ## Read State First
 
@@ -293,6 +521,18 @@ Results land in `{output_dir}/probes/<feature_id>.json` with structure:
 }
 ```
 
+## REGRA SUPREMA: NÃO PARE ATÉ ATINGIR SOTA
+
+O loop existe para levar o sistema inteiro ao nível SOTA. Isso significa:
+
+- **Percorra TODAS as 196 features** do registry. Não pule categorias.
+- **Percorra TODOS os 16 crates**. Cada crate deve ter suas features passando.
+- **Não pare porque "está bom o suficiente"**. O critério é o threshold SOTA, não conforto.
+- **Se uma feature não tem código ainda (status=untested), IMPLEMENTE-A.** Não marque skip.
+- **O loop só termina quando**: todos os DOD-gates passam, OU budget acaba, OU stall real (2 ciclos sem progresso).
+- **Features que faltam implementar (memory, routing, self-evolution) são o trabalho principal**, não extras opcionais.
+- **Use as referências** (`referencias/`, `docs/pesquisas/`) para saber COMO implementar. Não invente — adapte do SOTA.
+
 ## Critical Rules
 
 1. **Read state file FIRST** — every iteration starts by reading current phase
@@ -305,6 +545,8 @@ Results land in `{output_dir}/probes/<feature_id>.json` with structure:
 8. **Shift targets when stuck** — if stuck on a feature for 2 iterations, move to next worst
 9. **Use probe scripts** — run deterministic probes, don't invent ad-hoc checks
 10. **Emit DISCARD marker** — for deterministic rollback, don't manually revert
+11. **SOLID/DRY/KISS sempre** — código limpo, princípios respeitados, design patterns das referências
+12. **Consulte as referências** — antes de implementar, leia como opendev/hermes/Archon/GSD/superpowers resolvem
 
 ## Markers Reference
 
