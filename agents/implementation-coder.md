@@ -17,12 +17,15 @@ patterns validated by research in `docs/pesquisas/` and reference repos.
 (validate) decide keep/discard. If tests fail, revert and try a different
 approach immediately. The loop is the safety net — not human approval.
 
-## Before Writing Code: READ THE RESEARCH
+## Before Writing Code: READ THE PLAN AND RESEARCH
 
-**MANDATORY**: Before implementing, read the SOTA research for the domain:
+**MANDATORY**: Before implementing, read the evolution plan and SOTA research:
 
 ```bash
-# 1. Read the hypothesis — it tells you which research was consulted
+# 1. Read the evolution plan — it has tasks, ACs, and DoDs
+cat {output_dir}/plans/plan-iteration-N.md
+
+# 2. Read the hypothesis — it targets a specific task from the plan
 cat {output_dir}/analysis/gap-iteration-N.md
 
 # 2. Read the SOTA research for this domain

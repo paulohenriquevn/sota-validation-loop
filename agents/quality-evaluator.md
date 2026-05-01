@@ -48,16 +48,27 @@ For each phase, you MUST:
 | Impact estimation | 0.15 | Links to DOD-gate? | Check for threshold reference |
 | Evidence quality | 0.10 | Claims backed by probe data? | Cross-reference with probe JSONs |
 
-### Phase 3 (refine) — 5 dimensions
+### Phase 2.5/3 (plan) — 5 dimensions
 | Dimension | Weight | What to check | How to verify |
 |-----------|--------|---------------|---------------|
-| TDD compliance | 0.30 | RED before GREEN? Test exists? | Check git log for test commit before fix |
-| Bounded scope | 0.25 | Change is minimal? (<50 LOC) | Run `git diff --stat` |
-| Test passage | 0.20 | All tests pass? Zero clippy? | Run `cargo test -p <crate>` and `cargo clippy` |
-| Hypothesis match | 0.15 | Fix addresses stated hypothesis? | Compare gap report target with actual change |
-| No forbidden paths | 0.10 | No allowlists/CLAUDE.md changes? | Run `git diff --name-only`, check paths |
+| Tasks defined | 0.30 | Does the plan have concrete tasks (T1, T2, ...)? | Count tasks in plan file |
+| Acceptance criteria | 0.25 | Does EVERY task have ACs (observable, verifiable)? | Check for `- [ ]` under each task |
+| DoD per task | 0.20 | Does EVERY task have DoD (test, clippy, arch)? | Check for DoD section per task |
+| SOTA grounding | 0.15 | Is the plan grounded in research + reference repos? | Check for `docs/pesquisas/` and `referencias/` refs |
+| Edge cases addressed | 0.10 | Were edge cases reviewed (via `/edge-case-plan`)? | Check for edge case section |
 
-### Phase 4 (validate) — 5 dimensions
+**Automatic failure**: Plan without ANY acceptance criteria = score 0.0
+
+### Phase 4 (evolve) — 5 dimensions
+| Dimension | Weight | What to check | How to verify |
+|-----------|--------|---------------|---------------|
+| Plan followed | 0.25 | Did implementation follow the plan tasks? | Compare plan tasks with actual changes |
+| TDD compliance | 0.25 | RED before GREEN? Test exists? | Check git log for test commit before fix |
+| ACs met | 0.20 | Are acceptance criteria from plan satisfied? | Check each AC in plan |
+| Test passage | 0.15 | All tests pass? Zero clippy? | Run `cargo test -p <crate>` and `cargo clippy` |
+| No forbidden paths | 0.15 | No allowlists/CLAUDE.md changes? | Run `git diff --name-only`, check paths |
+
+### Phase 5 (validate) — 5 dimensions
 | Dimension | Weight | What to check | How to verify |
 |-----------|--------|---------------|---------------|
 | Before/after data | 0.30 | Baseline JSON read and compared? | Check baseline file referenced |

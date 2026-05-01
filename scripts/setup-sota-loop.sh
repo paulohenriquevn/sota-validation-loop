@@ -74,7 +74,7 @@ print(count)
 " 2>/dev/null || echo "0")
 
 # Create output directory structure
-mkdir -p "$OUTPUT_DIR"/{research,probes,analysis,baselines,progress,report,state}
+mkdir -p "$OUTPUT_DIR"/{research,probes,analysis,plans,baselines,progress,report,state}
 mkdir -p .claude
 
 # Create state file with prompt

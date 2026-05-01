@@ -491,22 +491,80 @@ Identify the worst-performing feature and root-cause it.
 5. Write analysis to `{output_dir}/analysis/gap-iteration-N.md`
 6. When done: `<!-- PHASE_2_COMPLETE -->`
 
-### Phase 3: REFINE
+### Phase 2.5: PLAN
 
-Apply a targeted fix using TDD. The hook saves a git baseline before this phase.
+Create an evolution plan BEFORE writing any code. The plan is the contract
+between analysis and implementation — no code without a plan.
 
 1. Read the gap analysis from Phase 2
-2. **Verify the target file exists**: `ls -la <target_file>` before proceeding
-3. Formulate ONE hypothesis (not multiple)
-4. Apply the fix immediately using TDD:
+2. Read the SOTA research for the target domain (`docs/pesquisas/<domain>/`)
+3. Read the reference implementation (from `referencias/` or the research)
+4. Consult the relevant domain architect for SOTA-aligned approach
+5. Write the evolution plan to `{output_dir}/plans/plan-iteration-N.md` with:
+
+```markdown
+## Evolution Plan — Iteration N
+
+### Target
+- **Feature**: <feature_id>
+- **Domain**: <domain>
+- **Current state**: FAIL — <root cause from Phase 2>
+- **SOTA target**: <threshold from docs/sota-thresholds.toml>
+
+### Research Basis
+- **Paper/doc**: <source in docs/pesquisas/>
+- **Reference pattern**: <repo/file:line>
+- **Domain architect assessment**: <architect recommendation>
+
+### Tasks
+
+#### T1 — <title>
+- **What**: <concrete change>
+- **File(s)**: <exact paths, (NEW) if creating>
+- **Acceptance criteria**:
+  - [ ] <observable, verifiable condition>
+  - [ ] <observable, verifiable condition>
+- **DoD**:
+  - [ ] Test written (RED) and passing (GREEN)
+  - [ ] `cargo test -p <crate>` green
+  - [ ] `cargo clippy -p <crate> -- -D warnings` zero warnings
+  - [ ] `make check-arch` zero violations
+
+#### T2 — <title> (if needed)
+- ...
+
+### Edge Cases
+<pragmatic edge cases — only real risks, not paranoia>
+
+### Risks
+- <what could go wrong, and how to detect/mitigate>
+
+### Verification
+- `cargo test -p <crate> --no-fail-fast`
+- `make check-arch`
+- `make check-unwrap`
+- Probe: `bash scripts/probe-runner.sh . {output_dir}/probes <category>`
+```
+
+6. Run `/edge-case-plan` on the plan to catch unplanned edge cases
+7. If MUST FIX edge cases found → incorporate into the plan
+8. When done: `<!-- PHASE_2_5_COMPLETE -->`
+
+### Phase 3: EVOLVE
+
+Execute the plan from Phase 2.5 using TDD. The hook saves a git baseline before this phase.
+
+1. Read the evolution plan from `{output_dir}/plans/plan-iteration-N.md`
+2. Execute each task in order, following TDD for each:
    - RED: Write test that proves the feature is broken
    - GREEN: Write minimum code to make it pass
    - REFACTOR: Clean up
-5. Verify: `cargo test -p <crate>` + `cargo clippy`
-6. If tests fail or clippy warns → revert and try different approach
-7. **NEVER** modify: allowlists, CLAUDE.md, Makefile, gate scripts
-8. When done: `<!-- PHASE_3_COMPLETE -->`
-9. **Safety net**: Phase 4 (validate) will revert if regressions detected
+3. After each task, verify its acceptance criteria and DoD are met
+4. Verify: `cargo test -p <crate>` + `cargo clippy` + `make check-arch`
+5. If tests fail or clippy warns → revert and try different approach
+6. **NEVER** modify: allowlists, CLAUDE.md, Makefile, gate scripts
+7. When done (ALL tasks complete, ALL DoDs met): `<!-- PHASE_4_COMPLETE -->`
+8. **Safety net**: Phase 5 (validate) will revert if regressions detected
 
 ### Phase 4: VALIDATE
 
@@ -531,7 +589,7 @@ Rerun probes and decide keep or discard. Rollback is DETERMINISTIC.
    to rollback deterministically. Record WHY it was discarded.
 7. If KEEP: update feature registry, update counts
 8. Emit: `<!-- FEATURES_STATUS:total=N,passing=N,failing=N -->`
-9. When done: `<!-- PHASE_4_COMPLETE -->`
+9. When done: `<!-- PHASE_5_COMPLETE -->`
 
 ### Phase 5: REPORT
 
@@ -550,7 +608,7 @@ Produce the final validation report.
    - Refinement history (each cycle: hypothesis, result, keep/discard)
    - Remaining gaps (prioritized)
    - Stall analysis (if detected)
-6. When done: `<!-- PHASE_5_COMPLETE -->`
+6. When done: `<!-- PHASE_6_COMPLETE -->`
 
 If features are still failing AND refinement cycles remain:
 - Emit: `<!-- LOOP_BACK_TO_PROBE -->` to trigger another cycle
@@ -628,7 +686,13 @@ O loop existe para levar o sistema inteiro ao nível SOTA. Isso significa:
 
 | Marker | Meaning |
 |--------|---------|
-| `<!-- PHASE_N_COMPLETE -->` | Phase N work is done |
+| `<!-- PHASE_0_COMPLETE -->` | Phase 0 (research) done |
+| `<!-- PHASE_1_COMPLETE -->` | Phase 1 (probe) done |
+| `<!-- PHASE_2_COMPLETE -->` | Phase 2 (analyze) done |
+| `<!-- PHASE_2_5_COMPLETE -->` | Phase 2.5 (plan) done — also accepted: `PHASE_3_COMPLETE` |
+| `<!-- PHASE_4_COMPLETE -->` | Phase 3 (evolve) done |
+| `<!-- PHASE_5_COMPLETE -->` | Phase 4 (validate) done |
+| `<!-- PHASE_6_COMPLETE -->` | Phase 5 (report) done |
 | `<!-- QUALITY_SCORE:0.XX -->` | Quality gate score |
 | `<!-- QUALITY_PASSED:1 -->` | Quality gate passed |
 | `<!-- QUALITY_PASSED:0 -->` | Quality gate failed |

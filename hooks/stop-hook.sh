@@ -29,21 +29,23 @@ PROBE_SCRIPT="${PLUGIN_ROOT}/scripts/probe-runner.sh"
 
 # Phase max iterations (tunable)
 declare -A PHASE_MAX_ITER=(
-  [0]=10  # research — SOTA deep research (95% confidence rule: iterate until confident)
+  [0]=10  # research — SOTA deep research (95% confidence rule)
   [1]=3   # probe — run E2E probes
   [2]=3   # analyze — identify worst gaps
-  [3]=5   # refine — propose and apply fixes
-  [4]=3   # validate — rerun probes, compare
-  [5]=2   # report — final report
+  [3]=3   # plan — evolution plan (tasks, ACs, DoDs)
+  [4]=5   # evolve — execute plan with TDD
+  [5]=3   # validate — rerun probes, compare
+  [6]=2   # report — final report
 )
 
 PHASE_NAMES=(
-  "research"  # Phase 0 — NEW: Deep Research
-  "probe"
-  "analyze"
-  "refine"
-  "validate"
-  "report"
+  "research"  # Phase 0 — Deep Research (95% confidence)
+  "probe"     # Phase 1 — Deterministic probes
+  "analyze"   # Phase 2 — Gap analysis
+  "plan"      # Phase 2.5 — Evolution plan (tasks, ACs, DoDs)
+  "evolve"    # Phase 3 — Execute plan with TDD
+  "validate"  # Phase 4 — Keep/discard
+  "report"    # Phase 5 — Final report
 )
 
 # -------------------------------------------------------------------
@@ -101,7 +103,7 @@ SPENT_USD=$(read_state_field "spent_usd" "0.0")
 PHASE_NAME="${PHASE_NAMES[$CURRENT_PHASE]:-unknown}"
 
 # Ensure output directories exist
-mkdir -p "$OUTPUT_DIR"/{research,probes,analysis,baselines,progress,report}
+mkdir -p "$OUTPUT_DIR"/{research,probes,analysis,plans,baselines,progress,report}
 
 # -------------------------------------------------------------------
 # 3. Read hook input (Claude's last output) — with error handling
@@ -173,6 +175,10 @@ PHASE_COMPLETE=false
 if echo "$LAST_OUTPUT" | grep -q "<!-- PHASE_${CURRENT_PHASE}_COMPLETE -->"; then
   PHASE_COMPLETE=true
 fi
+# Phase 3 (plan) can also be signaled via the legacy "2.5" marker
+if [ "$CURRENT_PHASE" -eq 3 ] && echo "$LAST_OUTPUT" | grep -q '<!-- PHASE_2_5_COMPLETE -->'; then
+  PHASE_COMPLETE=true
+fi
 
 # Detect quality gate markers
 QUALITY_SCORE=""
@@ -225,7 +231,8 @@ fi
 # 7. Baseline snapshot management
 # -------------------------------------------------------------------
 # Before Phase 3 (refine) starts, snapshot the current state
-if [ "$CURRENT_PHASE" -eq 3 ] && [ "$PHASE_ITERATION" -eq 1 ] && [ "$PHASE_COMPLETE" = false ]; then
+# Baseline saved before Phase 4 (evolve), which executes the plan from Phase 3 (plan)
+if [ "$CURRENT_PHASE" -eq 4 ] && [ "$PHASE_ITERATION" -eq 1 ] && [ "$PHASE_COMPLETE" = false ]; then
   BASELINE_FILE="$OUTPUT_DIR/baselines/baseline-cycle-${REFINEMENT_CYCLES}-iter-${GLOBAL_ITERATION}.json"
   if [ ! -f "$BASELINE_FILE" ]; then
     echo "📸 Saving baseline snapshot before fix" >&2
@@ -291,10 +298,10 @@ with open('$PROGRESS_FILE') as f:
         if line:
             entries.append(json.loads(line))
 
-# Get passing counts at end of each cycle (phase 5 entries)
+# Get passing counts at end of each cycle (phase 6/report entries)
 cycle_results = {}
 for e in entries:
-    if e.get('phase') == 5:
+    if e.get('phase') == 6:
         cycle_results[e['cycle']] = e['features_passing']
 
 # Check last 2 cycles
@@ -323,7 +330,8 @@ NEXT_PHASE_ITER=$((PHASE_ITERATION + 1))
 
 if [ "$PHASE_COMPLETE" = true ]; then
   # Quality gate check (phases 2-4)
-  if [ "$CURRENT_PHASE" -ge 2 ] && [ "$CURRENT_PHASE" -le 4 ]; then
+  # Quality gates on phases 2-5 (analyze, plan, evolve, validate)
+  if [ "$CURRENT_PHASE" -ge 2 ] && [ "$CURRENT_PHASE" -le 5 ]; then
     if [ "$QUALITY_PASSED" = "0" ]; then
       # Quality gate FAILED — repeat phase with feedback
       echo "⚠️  Quality gate FAILED (score: ${QUALITY_SCORE:-?}). Repeating phase $PHASE_NAME." >&2
@@ -343,7 +351,7 @@ if [ "$PHASE_COMPLETE" = true ]; then
       NEXT_PHASE_ITER=1
     fi
   else
-    # No quality gate for phases 0, 1, 5 — advance
+    # No quality gate for phases 0, 1, 6 — advance
     NEXT_PHASE=$((CURRENT_PHASE + 1))
     NEXT_PHASE_ITER=1
   fi
@@ -375,11 +383,11 @@ fi
 # -------------------------------------------------------------------
 # 12. Check if loop is complete (Phase 5 finished)
 # -------------------------------------------------------------------
-if [ "$NEXT_PHASE" -gt 5 ]; then
+if [ "$NEXT_PHASE" -gt 6 ]; then
   if [ "$FEATURES_FAILING" -gt 0 ] && [ "$REFINEMENT_CYCLES" -lt "$MAX_REFINEMENT_CYCLES" ]; then
     if [ "$STALL_DETECTED" = "true" ]; then
       echo "🛑 Features still failing but no progress. Stopping after $REFINEMENT_CYCLES cycles." >&2
-      NEXT_PHASE=5
+      NEXT_PHASE=6
     else
       echo "🔄 Still $FEATURES_FAILING features failing. Auto loop-back. Cycle $((REFINEMENT_CYCLES + 1))/$MAX_REFINEMENT_CYCLES" >&2
       NEXT_PHASE=1
@@ -387,7 +395,7 @@ if [ "$NEXT_PHASE" -gt 5 ]; then
       REFINEMENT_CYCLES=$((REFINEMENT_CYCLES + 1))
     fi
   else
-    NEXT_PHASE=5  # Stay in report phase — loop is done
+    NEXT_PHASE=6  # Stay in report phase — loop is done
   fi
 fi
 

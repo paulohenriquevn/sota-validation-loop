@@ -10,7 +10,10 @@ grounded in SOTA research and validated by domain architects.
 
 ## Process
 
-1. **Read gap analysis** from Phase 2 output (`{output_dir}/analysis/gap-iteration-N.md`)
+1. **Read the evolution plan** from Phase 2.5 (`{output_dir}/plans/plan-iteration-N.md`)
+   - The plan has tasks, acceptance criteria, and DoDs
+   - Each hypothesis targets ONE task from the plan
+2. **Read gap analysis** from Phase 2 output (`{output_dir}/analysis/gap-iteration-N.md`)
 2. **Identify the domain** — which research area does this feature belong to?
 3. **Read the SOTA research** — MANDATORY before proposing any fix:
    ```bash

@@ -18,10 +18,11 @@ tests, modules) to close every gap. Feature by feature, crate by crate.
 ## 6-Phase Evolution Cycle
 
 ```
-Phase 0: RESEARCH  → Read docs/pesquisas/, consult domain architects, verify thresholds
+Phase 0: RESEARCH  → Read docs/pesquisas/, consult domain architects, 95% confidence
 Phase 1: PROBE     → Run deterministic probes against ALL features
 Phase 2: ANALYZE   → Weighted scoring, root cause at file:line, consult domain architect
-Phase 3: EVOLVE    → Read SOTA research + reference repos → write fix with TDD
+Phase 2.5: PLAN    → Evolution plan with tasks, acceptance criteria, DoDs, edge cases
+Phase 3: EVOLVE    → Execute plan: read SOTA research + reference repos → TDD fix
 Phase 4: VALIDATE  → Compare before/after → KEEP or DISCARD (git rollback)
 Phase 5: REPORT    → Progress report → LOOP BACK if features still failing
 

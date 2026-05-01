@@ -24,7 +24,8 @@ is state-of-the-art or the budget runs out.
 
 ```
 Phase 0: RESEARCH   Read docs/pesquisas/, consult 17 domain architects,
-                    verify thresholds are actually SOTA (not stale numbers)
+                    verify thresholds are actually SOTA (not stale numbers).
+                    95% confidence required on ALL thresholds.
 
 Phase 1: PROBE      Run deterministic probes against ALL features.
                     Measure: what's SOTA? What's below?
@@ -33,8 +34,11 @@ Phase 2: ANALYZE    Score every failing feature. The worst gap + highest
                     SOTA impact goes first. Consult domain architect for
                     root cause.
 
-Phase 3: EVOLVE     Read the SOTA research. Read the reference repos.
-                    Consult the domain architect. Write the FIX with TDD.
+Phase 2.5: PLAN     Create evolution plan with tasks, acceptance criteria,
+                    and DoDs. Run /edge-case-plan. No code without a plan.
+
+Phase 3: EVOLVE     Execute the plan. Read the SOTA research. Read the
+                    reference repos. Write the FIX with TDD.
                     This is where the system GROWS — real production code.
 
 Phase 4: VALIDATE   Compare before/after. Improved? KEEP the code.
