@@ -71,5 +71,5 @@ Largest remaining gap: feature Y (root cause: Z).
 Save to `{output_dir}/report/sota-evolution-report.md`
 
 ```
-<!-- PHASE_5_COMPLETE -->
+<!-- PHASE_6_COMPLETE -->
 ```

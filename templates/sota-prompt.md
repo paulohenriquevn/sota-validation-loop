@@ -459,15 +459,14 @@ This phase includes **real E2E tests** using the `theo` binary with an active OA
 The E2E probes require an active OAuth session. Before running E2E probes:
 
 1. Check if auth is active: `theo stats .` — if it outputs graph data, session is active
-2. If NOT authenticated, **ask the user** to login:
+2. If NOT authenticated, emit this remediation note and continue:
    ```
    AUTH REQUIRED — The E2E probes need an active OAuth session.
-   Please run: theo login
+   Run in another terminal: theo login
    If headless/SSH: theo login --no-browser
-   Then paste the device code when prompted.
    ```
-3. Wait for user confirmation before proceeding with E2E probes
-4. If the user cannot authenticate (no API key, no access), mark E2E probes as `skip`
+3. Mark E2E probes as `skip` when auth is unavailable
+4. Continue the loop using deterministic non-OAuth probes and existing evidence
 
 #### Probe Execution
 
@@ -662,7 +661,7 @@ You do NOT need to manually revert files. Just emit the marker.
 ## Probe Scripts
 
 Deterministic probes are in `scripts/probe-runner.sh`. Available categories:
-`build tools cli languages context runtime memory routing security gates all`
+`build tools cli languages context runtime memory routing wiki security gates e2e all`
 
 Run specific category: `bash scripts/probe-runner.sh . {output_dir}/probes tools`
 Run all: `bash scripts/probe-runner.sh . {output_dir}/probes all`

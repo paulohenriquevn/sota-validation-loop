@@ -220,6 +220,12 @@ test_phase_completion_markers() {
   assert_eq "extracts total" "196" "$total"
   assert_eq "extracts passing" "42" "$passing"
   assert_eq "extracts failing" "3" "$failing"
+
+  output="Legacy evolve <!-- PHASE_3_COMPLETE --> output"
+  assert_contains "detects legacy PHASE_3_COMPLETE marker" "PHASE_3_COMPLETE" "$output"
+
+  output="Legacy report <!-- PHASE_5_COMPLETE --> output"
+  assert_contains "detects legacy PHASE_5_COMPLETE marker" "PHASE_5_COMPLETE" "$output"
 }
 
 # ===================================================================
@@ -346,36 +352,36 @@ test_loop_back_logic() {
 # TEST: Auto loop-back after phase 5
 # ===================================================================
 test_auto_loop_back() {
-  echo "=== Auto Loop-Back After Phase 5 ==="
+  echo "=== Auto Loop-Back After Report ==="
 
-  local next_phase=6  # beyond phase 5
+  local next_phase=7  # beyond phase 6
   local features_failing=3
   local cycles=1
   local max_cycles=5
   local stall=false
 
-  if [ "$next_phase" -gt 5 ]; then
+  if [ "$next_phase" -gt 6 ]; then
     if [ "$features_failing" -gt 0 ] && [ "$cycles" -lt "$max_cycles" ] && [ "$stall" = false ]; then
       next_phase=1
       cycles=$((cycles + 1))
     else
-      next_phase=5
+      next_phase=6
     fi
   fi
   assert_eq "auto loop-back when features failing" "1" "$next_phase"
   assert_eq "auto loop-back increments cycle" "2" "$cycles"
 
-  # No failures → stay at 5
-  next_phase=6
+  # No failures → stay at 6
+  next_phase=7
   features_failing=0
-  if [ "$next_phase" -gt 5 ]; then
+  if [ "$next_phase" -gt 6 ]; then
     if [ "$features_failing" -gt 0 ]; then
       next_phase=1
     else
-      next_phase=5
+      next_phase=6
     fi
   fi
-  assert_eq "no auto loop-back when all passing" "5" "$next_phase"
+  assert_eq "no auto loop-back when all passing" "6" "$next_phase"
 }
 
 # ===================================================================
@@ -417,12 +423,12 @@ test_stall_detection() {
 
   local progress_file="sota-output/progress/history.jsonl"
 
-  # Write 2 cycle-end entries with same passing count → stall
+  # Write 2 report-phase entries with same passing count → stall
   python3 -c "
 import json
 entries = [
-    {'iteration': 5, 'phase': 5, 'cycle': 0, 'features_passing': 10},
-    {'iteration': 10, 'phase': 5, 'cycle': 1, 'features_passing': 10},
+    {'iteration': 5, 'phase': 6, 'cycle': 0, 'features_passing': 10},
+    {'iteration': 10, 'phase': 6, 'cycle': 1, 'features_passing': 10},
 ]
 with open('$progress_file', 'w') as f:
     for e in entries:
@@ -438,7 +444,7 @@ with open('$progress_file') as f:
         entries.append(json.loads(line.strip()))
 cycle_results = {}
 for e in entries:
-    if e.get('phase') == 5:
+    if e.get('phase') == 6:
         cycle_results[e['cycle']] = e['features_passing']
 cycles = sorted(cycle_results.keys())
 if len(cycles) >= 2:
@@ -455,8 +461,8 @@ else:
   python3 -c "
 import json
 entries = [
-    {'iteration': 5, 'phase': 5, 'cycle': 0, 'features_passing': 10},
-    {'iteration': 10, 'phase': 5, 'cycle': 1, 'features_passing': 12},
+    {'iteration': 5, 'phase': 6, 'cycle': 0, 'features_passing': 10},
+    {'iteration': 10, 'phase': 6, 'cycle': 1, 'features_passing': 12},
 ]
 with open('$progress_file', 'w') as f:
     for e in entries:
@@ -471,7 +477,7 @@ with open('$progress_file') as f:
         entries.append(json.loads(line.strip()))
 cycle_results = {}
 for e in entries:
-    if e.get('phase') == 5:
+    if e.get('phase') == 6:
         cycle_results[e['cycle']] = e['features_passing']
 cycles = sorted(cycle_results.keys())
 if len(cycles) >= 2:

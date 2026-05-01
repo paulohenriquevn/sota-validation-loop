@@ -21,15 +21,14 @@ theo stats . 2>&1 | head -5
 ```
 
 If NOT authenticated:
-1. **Ask the user** to login — output this message:
+1. Record the E2E probes as `skip` (not `fail`)
+2. Emit the exact remediation message for the report/log:
    ```
    AUTH REQUIRED — The E2E probes need an active OAuth session.
-   Please run in your terminal: theo login
+   Run in another terminal: theo login
    If headless/SSH: theo login --no-browser
-   After login succeeds, tell me to continue.
    ```
-2. **Wait for user confirmation** before proceeding
-3. If user cannot authenticate, mark all E2E probes as `skip` (not `fail`)
+3. Continue probing non-OAuth coverage without blocking the loop
 
 ## Process
 

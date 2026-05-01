@@ -179,6 +179,14 @@ fi
 if [ "$CURRENT_PHASE" -eq 3 ] && echo "$LAST_OUTPUT" | grep -q '<!-- PHASE_2_5_COMPLETE -->'; then
   PHASE_COMPLETE=true
 fi
+# Phase 4 (evolve) may still emit the legacy "3" marker
+if [ "$CURRENT_PHASE" -eq 4 ] && echo "$LAST_OUTPUT" | grep -q '<!-- PHASE_3_COMPLETE -->'; then
+  PHASE_COMPLETE=true
+fi
+# Phase 6 (report) may still emit the legacy "5" marker
+if [ "$CURRENT_PHASE" -eq 6 ] && echo "$LAST_OUTPUT" | grep -q '<!-- PHASE_5_COMPLETE -->'; then
+  PHASE_COMPLETE=true
+fi
 
 # Detect quality gate markers
 QUALITY_SCORE=""

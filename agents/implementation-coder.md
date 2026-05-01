@@ -187,5 +187,5 @@ make check-panic
 - `make check-arch`: 0 violations
 - `make check-unwrap`: no new violations
 
-<!-- PHASE_3_COMPLETE -->
+<!-- PHASE_4_COMPLETE -->
 ```
