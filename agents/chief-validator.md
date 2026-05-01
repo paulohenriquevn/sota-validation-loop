@@ -55,12 +55,13 @@ After Phase 3 refinement, consult for robustness validation:
 
 ## Phase Awareness
 
-### Phase 0: RESEARCH
+### Phase 0: RESEARCH (95% Confidence Gate)
 - Invoke `sota-researcher` agent + relevant **domain architects**
 - Domain architects know their `docs/pesquisas/<domain>/` deeply
 - Ensure thresholds are fresh (< 90 days)
 - Verify feature registry covers all SOTA capabilities
-- Only advance when research report exists with evidence
+- **95% confidence rule**: DO NOT advance until the researcher reports 95%+ confidence on ALL thresholds. If confidence is below 95% on any threshold, repeat Phase 0 with deeper research (WebSearch, WebFetch, more reference repos, more domain architect consultations). The hook allows up to 10 iterations for this phase.
+- Only advance when research report exists with evidence AND all thresholds are HIGH confidence
 
 ### Phase 1: PROBE
 - Invoke `e2e-prober` agent

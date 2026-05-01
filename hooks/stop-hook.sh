@@ -29,7 +29,7 @@ PROBE_SCRIPT="${PLUGIN_ROOT}/scripts/probe-runner.sh"
 
 # Phase max iterations (tunable)
 declare -A PHASE_MAX_ITER=(
-  [0]=2   # research — SOTA deep research
+  [0]=10  # research — SOTA deep research (95% confidence rule: iterate until confident)
   [1]=3   # probe — run E2E probes
   [2]=3   # analyze — identify worst gaps
   [3]=5   # refine — propose and apply fixes
