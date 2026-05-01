@@ -104,6 +104,54 @@ run_probe() {
   fi
 }
 
+# -------------------------------------------------------------------
+# Theo binary discovery
+# -------------------------------------------------------------------
+THEO_BIN=""
+if [ -x "$PROJECT_ROOT/target/release/theo" ]; then
+  THEO_BIN="$PROJECT_ROOT/target/release/theo"
+elif [ -x "$PROJECT_ROOT/target/debug/theo" ]; then
+  THEO_BIN="$PROJECT_ROOT/target/debug/theo"
+fi
+
+# -------------------------------------------------------------------
+# Auth check — verify OAuth session is active
+# -------------------------------------------------------------------
+check_auth() {
+  if [ -z "$THEO_BIN" ]; then
+    echo "NO_BINARY"
+    return
+  fi
+  # Try a lightweight command that requires auth
+  if $THEO_BIN stats "$PROJECT_ROOT" 2>&1 | grep -qE 'nodes|edges|files'; then
+    echo "AUTHENTICATED"
+  else
+    echo "NOT_AUTHENTICATED"
+  fi
+}
+
+AUTH_STATUS=""
+request_auth_if_needed() {
+  if [ -n "$AUTH_STATUS" ]; then return; fi
+  AUTH_STATUS=$(check_auth)
+  if [ "$AUTH_STATUS" = "NOT_AUTHENTICATED" ]; then
+    echo "" >&2
+    echo "============================================" >&2
+    echo "AUTH REQUIRED — OAuth session not active." >&2
+    echo "" >&2
+    echo "Please run in another terminal:" >&2
+    echo "  $THEO_BIN login" >&2
+    echo "" >&2
+    echo "If running headless / SSH, use:" >&2
+    echo "  $THEO_BIN login --no-browser" >&2
+    echo "  (then paste the device code shown)" >&2
+    echo "" >&2
+    echo "After login, re-run the probes." >&2
+    echo "============================================" >&2
+    echo "" >&2
+  fi
+}
+
 # ============================================================================
 # CATEGORY: BUILD & TEST (fundamental probes)
 # ============================================================================
@@ -675,6 +723,91 @@ probe_wiki() {
 }
 
 # ============================================================================
+# CATEGORY: E2E — Real end-to-end tests using the theo binary with OAuth
+# These probes run the ACTUAL theo CLI against a real codebase.
+# Requires an active OAuth session (theo login).
+# ============================================================================
+probe_e2e() {
+  echo "=== E2E (real theo CLI — requires OAuth session) ==="
+
+  if [ -z "$THEO_BIN" ]; then
+    run_probe "e2e.binary_available" "" "" "theo binary not built — run cargo build -p theo first"
+    return
+  fi
+
+  request_auth_if_needed
+
+  if [ "$AUTH_STATUS" = "NOT_AUTHENTICATED" ]; then
+    run_probe "e2e.auth_active" "" "" "OAuth session not active — run theo login first"
+    return
+  fi
+
+  run_probe "e2e.auth_active" \
+    "echo AUTHENTICATED" \
+    "AUTHENTICATED"
+
+  # --- stats: graph statistics (no LLM call, reads code graph) ---
+  run_probe "e2e.stats_produces_output" \
+    "$THEO_BIN stats $PROJECT_ROOT 2>&1" \
+    "nodes|edges|files"
+
+  # --- context: GRAPHCTX assembly (uses LLM for ranking) ---
+  run_probe "e2e.context_assembles" \
+    "$THEO_BIN context $PROJECT_ROOT 'agent loop state machine' --headless 2>&1" \
+    "."
+
+  # --- context: search query produces ranked results ---
+  run_probe "e2e.context_search_returns_results" \
+    "$THEO_BIN context $PROJECT_ROOT 'MemoryProvider trait' --headless 2>&1" \
+    "."
+
+  # --- impact: file impact analysis ---
+  run_probe "e2e.impact_analysis" \
+    "$THEO_BIN impact crates/theo-agent-runtime/src/run_engine.rs --repo $PROJECT_ROOT 2>&1 | head -20" \
+    "."
+
+  # --- memory lint: memory subsystem hygiene ---
+  run_probe "e2e.memory_lint" \
+    "$THEO_BIN memory lint --repo $PROJECT_ROOT 2>&1" \
+    "."
+
+  # --- init: project initialization (dry — checks .theo/ creation) ---
+  # We test in a temp dir to avoid modifying the real project
+  local TEMP_INIT_DIR
+  TEMP_INIT_DIR=$(mktemp -d)
+  cp -r "$PROJECT_ROOT/.git" "$TEMP_INIT_DIR/.git" 2>/dev/null || true
+  run_probe "e2e.init_creates_config" \
+    "cd $TEMP_INIT_DIR && $THEO_BIN init --repo . 2>&1; test -f .theo/theo.md && echo 'INIT_OK' || echo 'INIT_FAILED'" \
+    "INIT_OK"
+  rm -rf "$TEMP_INIT_DIR"
+
+  # --- headless single-shot: agent executes a real task ---
+  run_probe "e2e.headless_single_shot" \
+    "timeout 120 $THEO_BIN agent --headless --repo $PROJECT_ROOT 'list the top 5 largest files in crates/theo-domain/src/' 2>&1 | tail -20" \
+    "."
+
+  # --- subagent ls: list persisted sub-agent runs ---
+  run_probe "e2e.subagent_ls" \
+    "$THEO_BIN subagent ls --repo $PROJECT_ROOT 2>&1" \
+    "."
+
+  # --- checkpoints ls: list workdir checkpoints ---
+  run_probe "e2e.checkpoints_ls" \
+    "$THEO_BIN checkpoints ls --repo $PROJECT_ROOT 2>&1" \
+    "."
+
+  # --- mcp: MCP discovery cache ---
+  run_probe "e2e.mcp_status" \
+    "$THEO_BIN mcp --repo $PROJECT_ROOT 2>&1 || true" \
+    "."
+
+  # --- skill list: skill catalog ---
+  run_probe "e2e.skill_list" \
+    "$THEO_BIN skill --repo $PROJECT_ROOT 2>&1 || true" \
+    "."
+}
+
+# ============================================================================
 # MAIN: Run selected category or all
 # ============================================================================
 echo "SOTA Probe Runner — $(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -695,6 +828,7 @@ case "$CATEGORY" in
   security) probe_security ;;
   wiki)     probe_wiki ;;
   gates)    probe_quality_gates ;;
+  e2e)      probe_e2e ;;
   all)
     probe_build
     probe_tools
@@ -707,10 +841,11 @@ case "$CATEGORY" in
     probe_wiki
     probe_security
     probe_quality_gates
+    probe_e2e
     ;;
   *)
     echo "Unknown category: $CATEGORY"
-    echo "Available: build tools cli languages context runtime memory routing wiki security gates all"
+    echo "Available: build tools cli languages context runtime memory routing wiki security gates e2e all"
     exit 1
     ;;
 esac

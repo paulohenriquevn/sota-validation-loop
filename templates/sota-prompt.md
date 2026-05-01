@@ -452,24 +452,47 @@ ensures thresholds are actually SOTA — not stale numbers.
 ### Phase 1: PROBE
 
 Run deterministic probes against every feature in the registry.
+This phase includes **real E2E tests** using the `theo` binary with an active OAuth session.
 
-1. Run the probe script: `bash scripts/probe-runner.sh <project_root> {output_dir}/probes all`
-2. Read probe results from `{output_dir}/probes/summary.json`
-3. Read individual probe results from `{output_dir}/probes/*.json`
-4. For features NOT covered by the probe script, run manual probes:
-   - **Tools**: invoke via `theo --headless` or unit test
-   - **CLI subcommands**: run `theo <cmd> --help` and verify output
-   - **Providers**: test auth if key available, skip if not
-   - **Languages**: parse a sample file, verify symbol extraction
-   - **Runtime phases**: run a simple task, verify phase transitions
-   - **Memory**: check trait exists, wiring, security scan coverage
-   - **Agent loop**: check doom loop detection, convergence, compaction
-   - **Context eng**: run retrieval benchmarks, check RRF fusion
-   - **Model routing**: check router trait, provider catalog
-   - **Security**: run check-secrets, check-arch, sandbox tests
-5. Update `docs/feature-registry.toml` status fields from probe results
-6. Emit: `<!-- FEATURES_STATUS:total=N,passing=N,failing=N -->`
-7. When done: `<!-- PHASE_1_COMPLETE -->`
+#### OAuth Session Management
+
+The E2E probes require an active OAuth session. Before running E2E probes:
+
+1. Check if auth is active: `theo stats .` — if it outputs graph data, session is active
+2. If NOT authenticated, **ask the user** to login:
+   ```
+   AUTH REQUIRED — The E2E probes need an active OAuth session.
+   Please run: theo login
+   If headless/SSH: theo login --no-browser
+   Then paste the device code when prompted.
+   ```
+3. Wait for user confirmation before proceeding with E2E probes
+4. If the user cannot authenticate (no API key, no access), mark E2E probes as `skip`
+
+#### Probe Execution
+
+1. Run ALL probe categories including E2E:
+   ```bash
+   bash scripts/probe-runner.sh <project_root> {output_dir}/probes all
+   ```
+   This runs 12 categories: build, tools, cli, languages, context, runtime,
+   memory, routing, security, wiki, gates, **e2e**
+
+2. The `e2e` category runs REAL commands:
+   - `theo stats .` — graph statistics (no LLM call)
+   - `theo context . '<query>' --headless` — GRAPHCTX assembly (uses LLM)
+   - `theo impact <file>` — file impact analysis
+   - `theo memory lint` — memory subsystem hygiene
+   - `theo init` — project initialization (in temp dir)
+   - `theo agent --headless '<task>'` — single-shot agent execution
+   - `theo subagent ls` / `theo checkpoints ls` — persistence checks
+
+3. Read probe results from `{output_dir}/probes/summary.json`
+4. Read individual probe results from `{output_dir}/probes/*.json`
+5. For features NOT covered by the probe script, run manual probes
+6. Update `docs/feature-registry.toml` status fields from probe results
+7. Emit: `<!-- FEATURES_STATUS:total=N,passing=N,failing=N -->`
+8. When done: `<!-- PHASE_1_COMPLETE -->`
 
 ### Phase 2: ANALYZE
 
