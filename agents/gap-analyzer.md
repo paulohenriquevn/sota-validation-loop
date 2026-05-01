@@ -59,6 +59,18 @@ For the TOP scored feature:
 4. **Check git history**: `git log --oneline -5 -- <file>` to see recent changes
 5. **Verify paths exist**: `ls -la <recommended_file>` before writing recommendation
 
+## Domain Architect Consultation
+
+Before finalizing root cause analysis, invoke the relevant **domain architect**
+from `.claude/agents/` for SOTA-aligned insight:
+
+- The domain architect knows the research in `docs/pesquisas/<domain>/` deeply
+- They can validate whether the proposed fix direction aligns with SOTA
+- They know which reference repos have solved similar problems
+- Ask them: "Is this the right fix? Does SOTA research suggest a better approach?"
+
+Map the failing feature's category to its architect (see `sota-prompt.md` architect table).
+
 ## Handling Missing Features
 
 When a feature has status `untested` or `fail` because the CODE DOES NOT EXIST:

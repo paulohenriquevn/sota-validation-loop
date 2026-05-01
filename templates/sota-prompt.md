@@ -43,14 +43,20 @@ theo-domain              → (nothing)
 theo-engine-graph        → theo-domain
 theo-engine-parser       → theo-domain
 theo-engine-retrieval    → theo-domain, theo-engine-graph, theo-engine-parser
+theo-engine-wiki         → theo-domain, theo-engine-graph, theo-engine-parser
 theo-governance          → theo-domain
-theo-infra-*             → theo-domain
+theo-isolation           → theo-domain
+theo-infra-llm           → theo-domain
+theo-infra-auth          → theo-domain
+theo-infra-mcp           → theo-domain
+theo-infra-memory        → theo-domain, theo-engine-retrieval
 theo-tooling             → theo-domain
 theo-agent-runtime       → theo-domain, theo-governance, theo-infra-llm,
-                           theo-infra-auth, theo-tooling
+                           theo-infra-auth, theo-tooling, theo-isolation,
+                           theo-infra-mcp
 theo-api-contracts       → theo-domain
 theo-application         → all crates above
-apps/*                   → theo-application, theo-api-contracts
+apps/*                   → theo-application, theo-api-contracts, theo-domain
 ```
 
 **Apps NEVER import engine/infra crates directly.**
@@ -73,15 +79,85 @@ apps/*                   → theo-application, theo-api-contracts
 ### Key Commands
 
 ```bash
+# Build & test
 cargo build --workspace --exclude theo-code-desktop
 cargo test --workspace --exclude theo-code-desktop --no-fail-fast
 cargo clippy --workspace --all-targets --no-deps -- -D warnings
 cargo test -p <crate-name>             # test single crate
-make check-arch                         # dependency contract (0 violations)
-make check-sizes                        # file/function size limits
-make check-secrets                      # no leaked secrets
+
+# Core gates (run frequently)
+make check-arch                         # T1.5 — dependency direction (0 violations)
+make check-unwrap                       # T2.5 — no .unwrap()/.expect() in prod
+make check-panic                        # T2.6 — no panic!/todo!/unimplemented! in prod
+make check-unsafe                       # T2.9 — every unsafe has // SAFETY: comment
+make check-sizes                        # T4.6 — file LOC limits (800 Rust, 400 TS)
+make check-secrets                      # T6.2 — no leaked secrets
+make check-changelog                    # T6.5 — CHANGELOG.md [Unreleased] updated
+
+# Extended gates
+make check-complexity                   # function LOC ceiling per crate
+make check-io-tests                     # T5.2 — no I/O tests in src/
 make check-sota-dod-quick               # SOTA DOD gates (fast)
+make check-sota-dod                     # SOTA DOD gates (full, with tests)
 ```
+
+### Domain Architects (`.claude/agents/`)
+
+The project has **23 agents** — 17 domain architects that monitor SOTA alignment,
+plus utility agents. When working on a domain, CONSULT the relevant architect
+for SOTA-aligned decisions.
+
+| Domain | Architect Agent | Crate(s) | Research |
+|--------|----------------|----------|----------|
+| Agent Loop | `agent-loop-architect` | `theo-agent-runtime` | `docs/pesquisas/agent-loop/` |
+| Sub-agents | `subagents-architect` | `theo-agent-runtime` | `docs/pesquisas/subagents/` |
+| Task/Plan Mgmt | `agents-architect` | `theo-tooling` | `docs/pesquisas/agents/` |
+| Context/Retrieval | `context-architect` | `theo-engine-retrieval`, `theo-engine-graph` | `docs/pesquisas/context/` |
+| Languages | `languages-architect` | `theo-engine-parser` | `docs/pesquisas/languages/` |
+| Wiki | `wiki-architect` | `theo-engine-wiki` | `docs/pesquisas/wiki/` |
+| Memory | `memory-architect` | `theo-infra-memory` | `docs/pesquisas/memory/` |
+| Providers | `providers-architect` | `theo-infra-llm` | `docs/pesquisas/providers/` |
+| Model Routing | `model-routing-architect` | `theo-infra-llm` | `docs/pesquisas/model-routing/` |
+| Observability | `observability-architect` | `theo-agent-runtime` | `docs/pesquisas/observability/` |
+| Prompt Eng. | `prompt-engineering-architect` | `theo-agent-runtime` | `docs/pesquisas/prompt-engineering/` |
+| Security | `security-governance-architect` | `theo-governance`, `theo-isolation` | `docs/pesquisas/security-governance/` |
+| CLI | `cli-architect` | `apps/theo-cli` | `docs/pesquisas/cli/` |
+| Tools | `tools-architect` | `theo-tooling` | `docs/pesquisas/tools/` |
+| Debug/DAP | `debug-architect` | `theo-tooling` | `docs/pesquisas/debug/` |
+| Evals | `evals-architect` | `apps/theo-benchmark` | `docs/pesquisas/evals/` |
+| Self-Evolution | `self-evolution-architect` | cross-domain | `docs/pesquisas/self-evolution/` |
+
+**Leadership:**
+- `cto-architect` — Truth guardian. Verifies: feature exists? 100% implemented? 100% usable? SOTA-backed? Integrated? Data-driven?
+- `edge-case-architect` — Robustness specialist. 7 edge case families.
+
+**Utility:** `arch-validator`, `code-reviewer`, `frontend-dev`, `test-runner`
+
+### Available Skills (`.claude/skills/`)
+
+| Skill | Purpose |
+|-------|---------|
+| `/code-audit [technique]` | Run gate scripts: arch, unwrap, panic, unsafe, sizes, secrets, etc. |
+| `/review [scope]` | Code review with compliance checks |
+| `/edge-case-plan [plan]` | Find edge cases in implementation plans |
+| `/meeting <topic>` | Full 22-agent meeting with structured minutes |
+| `/build [crate]` | Build workspace or specific crate |
+| `/test [crate]` | Run tests with failure analysis |
+| `/to-plan` | Create implementation plan (auto-runs edge-case-plan) |
+| `/show-domain [crate]` | X-ray health diagnostic per domain module |
+| `/refine` | SOTA refinement cycle (keep/discard) |
+| `/changelog` | Update CHANGELOG.md from commits |
+
+### Rules (`.claude/rules/`)
+
+| Rule File | Enforces |
+|-----------|----------|
+| `architecture.md` | 8 research-aligned domains, dependency direction, prohibitions |
+| `rust-conventions.md` | thiserror, no unwrap/eprintln in prod, tracing, unsafe SAFETY |
+| `testing.md` | TDD, AAA, 11 research-aligned focus areas, deterministic tests |
+| `frontend.md` | React 18 + TypeScript strict + Tailwind + Radix conventions |
+| `architecture-contract.yaml` | Machine-readable dep graph (consumed by check-arch) |
+| `recognized-patterns.toml` | 37 codified Rust idioms (ADR-021) |
 
 ### Feature Categories → Crates Mapping
 

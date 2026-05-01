@@ -26,22 +26,38 @@ For each `dod-gate`:
 - Verify the floor is justified by evidence (not arbitrary)
 - Check if industry practice has moved the floor higher
 
-### Step 2: Research each feature category against Theo Code crates
+### Step 2: Research each feature category via Domain Architects
 
-For EACH category, research SOTA AND map to the Theo Code crate that must evolve:
+The project has **17 domain architect agents** in `.claude/agents/`. Each knows
+their domain's SOTA research deeply. **Delegate domain-specific research to them.**
 
-| Category | Crate(s) to evolve | What to research |
-|----------|---------------------|-----------------|
-| Memory | `theo-domain`, `theo-infra-memory`, `theo-application` | MemGPT v2?, Mem0 updates?, CoALA implementations? Compare against RM0-RM5b roadmap in `docs/pesquisas/agent-memory-plan.md` |
-| Agent Loop | `theo-agent-runtime` | Ablation studies, loop patterns, SWE-Bench. Check `agent_loop.rs`, `run_engine.rs`, `compaction_stages.rs` |
-| Context Engineering | `theo-engine-retrieval`, `theo-engine-graph`, `theo-engine-parser` | **Graph-augmented agentic retrieval**. Read `crates/theo-engine-retrieval/README.md` FIRST. Check: embedding model (AllMiniLM is 15-25pts behind SOTA — P0 upgrade), graph attention propagation, PageRank, community detection, DepCov, RRF fusion. Research: `docs/pesquisas/context/code-retrieval-deep-research.md` (963 lines, 68 sources) |
-| Model Routing | `theo-domain`, `theo-infra-llm` | Routing papers, cost/quality. Check `model_limits.rs`, provider catalog |
-| Self-Evolution | `theo-agent-runtime` | Meta-harness, autoresearch. Check current evolution loop |
-| Prompt Engineering | `theo-agent-runtime`, `theo-tooling` | Prompting techniques, representation. Check tool schemas, system prompts |
-| Tools | `theo-tooling` | Tool designs, MCP. Check 72 tool implementations |
-| Sub-agents | `theo-agent-runtime` | Orchestration patterns. Check `subagent/mod.rs`, SubAgentRole |
-| Security | `theo-governance`, `theo-isolation` | Injection patterns, sandbox. Check bwrap/landlock, policy engine |
-| Observability | `theo-agent-runtime`, `theo-application` | Tracing, cost tracking. Check CostTracker, trajectory export |
+For EACH category, invoke the domain architect AND research the crate:
+
+| Category | Domain Architect | Crate(s) | Research Dir |
+|----------|-----------------|----------|--------------|
+| Memory | `memory-architect` | `theo-infra-memory`, `theo-domain` | `docs/pesquisas/memory/` |
+| Agent Loop | `agent-loop-architect` | `theo-agent-runtime` | `docs/pesquisas/agent-loop/` |
+| Context Eng. | `context-architect` | `theo-engine-retrieval`, `theo-engine-graph` | `docs/pesquisas/context/` |
+| Model Routing | `model-routing-architect` | `theo-infra-llm`, `theo-domain` | `docs/pesquisas/model-routing/` |
+| Self-Evolution | `self-evolution-architect` | `theo-agent-runtime` | `docs/pesquisas/self-evolution/` |
+| Prompt Eng. | `prompt-engineering-architect` | `theo-agent-runtime`, `theo-tooling` | `docs/pesquisas/prompt-engineering/` |
+| Tools | `tools-architect` | `theo-tooling` | `docs/pesquisas/tools/` |
+| Sub-agents | `subagents-architect` | `theo-agent-runtime` | `docs/pesquisas/subagents/` |
+| Security | `security-governance-architect` | `theo-governance`, `theo-isolation` | `docs/pesquisas/security-governance/` |
+| Observability | `observability-architect` | `theo-agent-runtime` | `docs/pesquisas/observability/` |
+| Wiki | `wiki-architect` | `theo-engine-wiki` | `docs/pesquisas/wiki/` |
+| Providers | `providers-architect` | `theo-infra-llm`, `theo-infra-auth` | `docs/pesquisas/providers/` |
+| CLI | `cli-architect` | `apps/theo-cli` | `docs/pesquisas/cli/` |
+| Debug/DAP | `debug-architect` | `theo-tooling` | `docs/pesquisas/debug/` |
+| Languages | `languages-architect` | `theo-engine-parser` | `docs/pesquisas/languages/` |
+| Evals | `evals-architect` | `apps/theo-benchmark` | `docs/pesquisas/evals/` |
+| Task/Plan | `agents-architect` | `theo-tooling` | `docs/pesquisas/agents/` |
+
+**Protocol per category:**
+1. Read the domain's `docs/pesquisas/<domain>/INDEX.md`
+2. Invoke the domain architect agent for SOTA alignment assessment
+3. Cross-reference with reference repos in `referencias/INDEX.md`
+4. Update thresholds with findings
 
 ### Step 3: Search the Theo Code research files
 
