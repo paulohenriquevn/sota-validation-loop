@@ -1,11 +1,11 @@
 ---
 name: sota-status
-description: View current SOTA validation loop status
+description: View current SOTA evolution loop status
 user-invocable: true
 allowed-tools: Bash(cat *), Bash(python3 *), Read
 ---
 
-# SOTA Validation Loop — Status
+# SOTA Evolution Loop — Status
 
 Check if the loop is active:
 
@@ -19,7 +19,7 @@ If active, read and display the current state:
 head -25 .claude/sota-loop.local.md 2>/dev/null
 ```
 
-Show feature validation summary:
+Show feature evolution summary:
 
 ```!
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/sota_database.py" stats 2>/dev/null || echo "No database found"

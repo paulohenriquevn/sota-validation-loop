@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Tests for SOTA Validation Loop — Stop Hook Logic
+# Tests for SOTA Evolution Loop — Stop Hook Logic
 # =============================================================================
 # Tests the core logic of the stop hook: state reading, marker detection,
 # phase advancement, loop-back, stall detection, and rollback.
@@ -57,9 +57,10 @@ create_state_file() {
     0) phase_name="research" ;;
     1) phase_name="probe" ;;
     2) phase_name="analyze" ;;
-    3) phase_name="refine" ;;
-    4) phase_name="validate" ;;
-    5) phase_name="report" ;;
+    3) phase_name="plan" ;;
+    4) phase_name="evolve" ;;
+    5) phase_name="verify" ;;
+    6) phase_name="report" ;;
   esac
 
   cat > ".claude/sota-loop.local.md" << EOF
@@ -237,7 +238,7 @@ test_loop_back_detection() {
 test_discard_detection() {
   echo "=== DISCARD Marker Detection ==="
 
-  local output="Validation failed <!-- DISCARD --> rolling back"
+  local output="Verification failed <!-- DISCARD --> rolling back"
   assert_contains "detects DISCARD" "DISCARD" "$output"
 }
 
@@ -576,13 +577,13 @@ test_probe_runner() {
 test_agent_files() {
   echo "=== Agent Files ==="
   local agents=(
-    "chief-validator"
+    "chief-evolver"
     "sota-researcher"
     "e2e-prober"
     "gap-analyzer"
     "hypothesis-generator"
     "implementation-coder"
-    "validation-runner"
+    "evolution-verifier"
     "quality-evaluator"
     "report-writer"
   )
@@ -596,20 +597,21 @@ test_agent_files() {
 # ===================================================================
 test_phase_names() {
   echo "=== Phase Names ==="
-  local names=("research" "probe" "analyze" "refine" "validate" "report")
+  local names=("research" "probe" "analyze" "plan" "evolve" "verify" "report")
   assert_eq "phase 0 = research" "research" "${names[0]}"
   assert_eq "phase 1 = probe" "probe" "${names[1]}"
   assert_eq "phase 2 = analyze" "analyze" "${names[2]}"
-  assert_eq "phase 3 = refine" "refine" "${names[3]}"
-  assert_eq "phase 4 = validate" "validate" "${names[4]}"
-  assert_eq "phase 5 = report" "report" "${names[5]}"
+  assert_eq "phase 3 = plan" "plan" "${names[3]}"
+  assert_eq "phase 4 = evolve" "evolve" "${names[4]}"
+  assert_eq "phase 5 = verify" "verify" "${names[5]}"
+  assert_eq "phase 6 = report" "report" "${names[6]}"
 }
 
 # ===================================================================
 # RUN ALL TESTS
 # ===================================================================
 echo "============================================"
-echo "SOTA Validation Loop — Test Suite"
+echo "SOTA Evolution Loop — Test Suite"
 echo "============================================"
 echo ""
 

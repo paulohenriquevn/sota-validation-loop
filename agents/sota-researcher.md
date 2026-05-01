@@ -1,6 +1,6 @@
 ---
 name: sota-researcher
-description: Deep Research agent — researches state-of-the-art for each feature category, updates thresholds with fresh evidence, and validates citations before the validation loop begins
+description: Deep Research agent — researches state-of-the-art for each feature category, updates thresholds with fresh evidence, and verifies citations before the evolution loop begins
 tools: Read, Glob, Grep, Bash, Write, WebFetch, WebSearch
 model: opus
 ---

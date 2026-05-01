@@ -1,19 +1,19 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "sota-validation-loop",
+  "name": "sota-evolution-loop",
   "version": "1.0.0",
-  "description": "Autonomous SOTA validation and refinement loop for AI coding agents.",
+  "description": "Autonomous SOTA evolution loop for AI coding agents.",
   "owner": {
     "name": "paulohenriquevn",
     "email": "paulohenriquevn@gmail.com"
   },
   "plugins": [
     {
-      "name": "sota-validation-loop",
-      "description": "Autonomous loop that validates ALL features against evidence-based SOTA thresholds. 5-phase pipeline (probe, analyze, refine, validate, report) with quality gates, keep/discard pattern, and loop-back for iterative improvement.",
+      "name": "sota-evolution-loop",
+      "description": "Autonomous loop that evolves ALL features toward evidence-based SOTA thresholds. 6-phase pipeline (research, probe, analyze, plan, evolve, verify, report) with TDD, real system testing via OAuth, quality gates, keep/discard pattern, and loop-back for iterative improvement.",
       "source": {
         "source": "github",
-        "repo": "paulohenriquevn/sota-validation-loop"
+        "repo": "paulohenriquevn/sota-evolution-loop"
       },
       "version": "1.0.0",
       "author": {

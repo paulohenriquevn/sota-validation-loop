@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# SOTA Validation Loop — Setup Script
+# SOTA Evolution Loop — Setup Script
 # =============================================================================
 # Called by /sota-loop command. Creates state file and output directory.
 # =============================================================================
@@ -83,7 +83,7 @@ STARTED_AT=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
 cat > "$STATE_FILE" << EOF
 ---
 active: true
-topic: "SOTA Validation and Refinement"
+topic: "SOTA Evolution"
 current_phase: 0
 phase_name: "research"
 phase_iteration: 1
@@ -106,9 +106,9 @@ $(cat "$TEMPLATE")
 EOF
 
 echo ""
-echo "🔄 SOTA Validation Loop initialized!"
+echo "🔄 SOTA Evolution Loop initialized!"
 echo ""
-echo "  Features to validate: $FEATURES_TOTAL"
+echo "  Features to evolve: $FEATURES_TOTAL"
 echo "  Thresholds: $THRESHOLDS_PATH"
 echo "  Registry: $REGISTRY_PATH"
 echo "  Max cycles: $MAX_CYCLES"

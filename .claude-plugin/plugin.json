@@ -1,18 +1,18 @@
 {
-  "name": "sota-validation-loop",
+  "name": "sota-evolution-loop",
   "version": "1.0.0",
-  "description": "Autonomous SOTA validation and refinement loop for AI coding agents. Validates features against evidence-based thresholds, identifies gaps, proposes improvements, and iterates with keep/discard pattern until SOTA.",
+  "description": "Autonomous SOTA evolution loop for AI coding agents. Evolves features using TDD against evidence-based SOTA thresholds, tests on real systems with OAuth, and iterates with keep/discard pattern until SOTA.",
   "author": {
     "name": "Paulo (usetheo)",
     "email": "paulohenriquevn@gmail.com"
   },
-  "repository": "https://github.com/paulohenriquevn/sota-validation-loop",
+  "repository": "https://github.com/paulohenriquevn/sota-evolution-loop",
   "license": "MIT",
   "keywords": [
     "sota",
-    "validation",
+    "evolution",
     "benchmark",
-    "refinement",
+    "tdd",
     "keep-discard",
     "quality-gates",
     "autonomous-agents",

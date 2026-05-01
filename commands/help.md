@@ -1,6 +1,6 @@
 ---
 name: help
-description: Explain SOTA validation loop and available commands
+description: Explain SOTA evolution loop and available commands
 user-invocable: true
 allowed-tools: Read
 ---
@@ -10,7 +10,7 @@ allowed-tools: Read
 ## What It Does
 
 Autonomous loop that **evolves** the system until ALL features reach SOTA
-thresholds. It doesn't just validate — it writes real production code (Rust,
+thresholds. It writes real production code (Rust,
 tests, modules) to close every gap. Feature by feature, crate by crate.
 
 **The target is SOTA. "Working" is not enough.**
@@ -23,7 +23,7 @@ Phase 1: PROBE     → Run deterministic probes against ALL features
 Phase 2: ANALYZE   → Weighted scoring, root cause at file:line, consult domain architect
 Phase 2.5: PLAN    → Evolution plan with tasks, acceptance criteria, DoDs, edge cases
 Phase 3: EVOLVE    → Execute plan: read SOTA research + reference repos → TDD fix
-Phase 4: VALIDATE  → Compare before/after → KEEP or DISCARD (git rollback)
+Phase 4: VERIFY    → Compare before/after → KEEP or DISCARD (git rollback)
 Phase 5: REPORT    → Progress report → LOOP BACK if features still failing
 
 Loop-back: features failing → return to Phase 1 → next worst feature
@@ -51,14 +51,14 @@ Stop: ALL DOD-gates pass | stall (2 cycles, 0 progress) | budget exhausted
   --completion-done TEXT  Promise text that terminates the loop
 ```
 
-## How It Evolves (not just validates)
+## How It Evolves
 
 | Step | What happens |
 |------|-------------|
 | Gap found | Consults domain architect + reads `docs/pesquisas/<domain>/` |
 | Fix proposed | Grounded in SOTA research + reference repo patterns |
 | Code written | Real Rust production code with TDD (RED→GREEN→REFACTOR) |
-| Code validated | `cargo test` + `cargo clippy` + `make check-arch` + `make check-unwrap` |
+| Code verified | `cargo test` + `cargo clippy` + `make check-arch` + `make check-unwrap` |
 | Regression? | Deterministic rollback via `git checkout -- .` |
 | Feature passes? | Next worst feature. Loop continues. |
 
@@ -74,7 +74,7 @@ observability, prompt-engineering, self-evolution, evals, agents.
 Verifies every completed phase: exists? implemented? usable? SOTA? integrated? data-driven?
 
 ### Edge Case Architect (`edge-case-architect`)
-Validates robustness of fixes: empty inputs, crash recovery, concurrency, permissions.
+Verifies robustness of fixes: empty inputs, crash recovery, concurrency, permissions.
 
 ### SOTA Research (`docs/pesquisas/`)
 18 research domains. Every fix cites its research basis.
@@ -87,13 +87,13 @@ I/O tests, SOTA DoD (quick and full).
 
 | Agent | Phase | Role |
 |-------|-------|------|
-| `chief-validator` | All | Orchestrator — meetings, strategy, delegates to domain architects |
+| `chief-evolver` | All | Orchestrator — meetings, strategy, delegates to domain architects |
 | `sota-researcher` | 0 | Deep SOTA research via domain architects + papers |
 | `e2e-prober` | 1 | Runs deterministic probe scripts |
 | `gap-analyzer` | 2 | Weighted scoring + domain architect consultation |
 | `hypothesis-generator` | 3 | SOTA-grounded fix proposal |
 | `implementation-coder` | 3 | Writes production Rust with TDD |
-| `validation-runner` | 4 | Baseline comparison, KEEP/DISCARD |
+| `evolution-verifier` | 4 | Baseline comparison, KEEP/DISCARD |
 | `quality-evaluator` | Gates | Scores phases 0.0-1.0, repeats if < 0.7 |
 | `report-writer` | 5 | Final report with trends |
 

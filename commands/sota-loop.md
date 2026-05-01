@@ -41,7 +41,7 @@ Phase 3: EVOLVE     Execute the plan. Read the SOTA research. Read the
                     reference repos. Write the FIX with TDD.
                     This is where the system GROWS — real production code.
 
-Phase 4: VALIDATE   Compare before/after. Improved? KEEP the code.
+Phase 4: VERIFY     Compare before/after. Improved? KEEP the code.
                     Regressed? DISCARD via deterministic git rollback.
                     CTO architect verifies: exists? implemented? SOTA? integrated?
 

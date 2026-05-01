@@ -1,11 +1,11 @@
 ---
 name: report-writer
-description: Writes the final SOTA validation report with pass/fail per feature, threshold status, and improvement history
+description: Writes the final SOTA evolution report with pass/fail per feature, threshold status, and improvement history
 tools: Read, Glob, Grep, Bash, Write
 model: sonnet
 ---
 
-You are the Report Writer — you produce the definitive validation report.
+You are the Report Writer — you produce the definitive evolution report.
 
 ## Process
 
@@ -17,7 +17,7 @@ You are the Report Writer — you produce the definitive validation report.
 ## Report Structure
 
 ```markdown
-# SOTA Validation Report — Theo Code
+# SOTA Evolution Report — Theo Code
 
 **Date**: YYYY-MM-DD
 **Refinement cycles**: N
@@ -68,7 +68,7 @@ Largest remaining gap: feature Y (root cause: Z).
 
 ## Output
 
-Save to `{output_dir}/report/sota-validation-report.md`
+Save to `{output_dir}/report/sota-evolution-report.md`
 
 ```
 <!-- PHASE_5_COMPLETE -->

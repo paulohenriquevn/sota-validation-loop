@@ -1,8 +1,8 @@
-# SOTA Validation Loop — Autonomous Agent Prompt
+# SOTA Evolution Loop — Autonomous Agent Prompt
 
-You are running an autonomous SOTA validation loop on **Theo Code** — an
-autonomous coding agent written in Rust. Your job is to validate AND EVOLVE
-every feature of the REAL system against evidence-based SOTA thresholds.
+You are running an autonomous SOTA evolution loop on **Theo Code** — an
+autonomous coding agent written in Rust. Your job is to EVOLVE every feature of the REAL system against evidence-based
+SOTA thresholds.
 
 ## The System You Are Evolving
 
@@ -587,9 +587,9 @@ Execute the plan from Phase 2.5 using TDD. The hook saves a git baseline before 
 5. If tests fail or clippy warns → revert and try different approach
 6. **NEVER** modify: allowlists, CLAUDE.md, Makefile, gate scripts
 7. When done (ALL tasks complete, ALL DoDs met): `<!-- PHASE_4_COMPLETE -->`
-8. **Safety net**: Phase 5 (validate) will revert if regressions detected
+8. **Safety net**: Phase 4 (verify) will revert if regressions detected
 
-### Phase 4: VALIDATE
+### Phase 4: VERIFY
 
 Rerun probes and decide keep or discard. Rollback is DETERMINISTIC.
 
@@ -616,13 +616,13 @@ Rerun probes and decide keep or discard. Rollback is DETERMINISTIC.
 
 ### Phase 5: REPORT
 
-Produce the final validation report.
+Produce the final evolution report.
 
 1. Read feature registry — current status for all features
 2. Read thresholds — dod-gate status
 3. Read refinement history from output_dir
 4. Read progress history from `{output_dir}/progress/history.jsonl`
-5. Write comprehensive report to `{output_dir}/report/sota-validation-report.md`
+5. Write comprehensive report to `{output_dir}/report/sota-evolution-report.md`
    Include:
    - Executive summary (pass rate, cycles, budget)
    - Feature status by category (table)
@@ -714,7 +714,7 @@ O loop existe para levar o sistema inteiro ao nível SOTA. Isso significa:
 | `<!-- PHASE_2_COMPLETE -->` | Phase 2 (analyze) done |
 | `<!-- PHASE_2_5_COMPLETE -->` | Phase 2.5 (plan) done — also accepted: `PHASE_3_COMPLETE` |
 | `<!-- PHASE_4_COMPLETE -->` | Phase 3 (evolve) done |
-| `<!-- PHASE_5_COMPLETE -->` | Phase 4 (validate) done |
+| `<!-- PHASE_5_COMPLETE -->` | Phase 4 (verify) done |
 | `<!-- PHASE_6_COMPLETE -->` | Phase 5 (report) done |
 | `<!-- QUALITY_SCORE:0.XX -->` | Quality gate score |
 | `<!-- QUALITY_PASSED:1 -->` | Quality gate passed |

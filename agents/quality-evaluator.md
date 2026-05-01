@@ -68,7 +68,7 @@ For each phase, you MUST:
 | Test passage | 0.15 | All tests pass? Zero clippy? | Run `cargo test -p <crate>` and `cargo clippy` |
 | No forbidden paths | 0.15 | No allowlists/CLAUDE.md changes? | Run `git diff --name-only`, check paths |
 
-### Phase 5 (validate) — 5 dimensions
+### Phase 4 (verify) — 5 dimensions
 | Dimension | Weight | What to check | How to verify |
 |-----------|--------|---------------|---------------|
 | Before/after data | 0.30 | Baseline JSON read and compared? | Check baseline file referenced |

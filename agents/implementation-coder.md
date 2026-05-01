@@ -14,7 +14,7 @@ patterns validated by research in `docs/pesquisas/` and reference repos.
 ## Autonomy Rule
 
 **Do NOT ask for permission.** Apply the fix, run tests, and let Phase 4
-(validate) decide keep/discard. If tests fail, revert and try a different
+(verify) decide keep/discard. If tests fail, revert and try a different
 approach immediately. The loop is the safety net — not human approval.
 
 ## Before Writing Code: READ THE PLAN AND RESEARCH

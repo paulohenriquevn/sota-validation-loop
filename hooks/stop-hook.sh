@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # =============================================================================
-# SOTA Validation Loop — Stop Hook (v2)
+# SOTA Evolution Loop — Stop Hook (v2)
 # =============================================================================
-# Implements the autonomous validation loop using the Ralph Wiggum pattern.
+# Implements the autonomous evolution loop using the Ralph Wiggum pattern.
 # On every Claude stop event, this script:
 #   1. Reads phase state from .claude/sota-loop.local.md
 #   2. Detects phase completion markers in Claude's output
@@ -34,7 +34,7 @@ declare -A PHASE_MAX_ITER=(
   [2]=3   # analyze — identify worst gaps
   [3]=3   # plan — evolution plan (tasks, ACs, DoDs)
   [4]=5   # evolve — execute plan with TDD
-  [5]=3   # validate — rerun probes, compare
+  [5]=3   # verify — rerun probes, compare
   [6]=2   # report — final report
 )
 
@@ -44,7 +44,7 @@ PHASE_NAMES=(
   "analyze"   # Phase 2 — Gap analysis
   "plan"      # Phase 2.5 — Evolution plan (tasks, ACs, DoDs)
   "evolve"    # Phase 3 — Execute plan with TDD
-  "validate"  # Phase 4 — Keep/discard
+  "verify"    # Phase 4 — Keep/discard
   "report"    # Phase 5 — Final report
 )
 
@@ -150,7 +150,7 @@ fi
 # -------------------------------------------------------------------
 if [ -n "$COMPLETION_PROMISE" ] && [ "$COMPLETION_PROMISE" != "null" ]; then
   if echo "$LAST_OUTPUT" | grep -qF "$COMPLETION_PROMISE"; then
-    echo "✅ SOTA validation loop complete! Promise fulfilled: $COMPLETION_PROMISE" >&2
+    echo "✅ SOTA evolution loop complete! Promise fulfilled: $COMPLETION_PROMISE" >&2
     echo "   Features: $FEATURES_PASSING/$FEATURES_TOTAL passing" >&2
     echo "   Refinement cycles: $REFINEMENT_CYCLES" >&2
     echo "   Budget spent: \$${SPENT_USD}" >&2
@@ -330,7 +330,7 @@ NEXT_PHASE_ITER=$((PHASE_ITERATION + 1))
 
 if [ "$PHASE_COMPLETE" = true ]; then
   # Quality gate check (phases 2-4)
-  # Quality gates on phases 2-5 (analyze, plan, evolve, validate)
+  # Quality gates on phases 2-5 (analyze, plan, evolve, verify)
   if [ "$CURRENT_PHASE" -ge 2 ] && [ "$CURRENT_PHASE" -le 5 ]; then
     if [ "$QUALITY_PASSED" = "0" ]; then
       # Quality gate FAILED — repeat phase with feedback
@@ -410,7 +410,7 @@ TMPFILE=$(mktemp)
 cat > "$TMPFILE" << YAML_END
 ---
 active: true
-topic: $(read_state_field "topic" "SOTA Validation and Refinement")
+topic: $(read_state_field "topic" "SOTA Evolution")
 current_phase: $NEXT_PHASE
 phase_name: "$NEXT_PHASE_NAME"
 phase_iteration: $NEXT_PHASE_ITER

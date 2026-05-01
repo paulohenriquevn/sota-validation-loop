@@ -1,16 +1,16 @@
-# SOTA Validation Loop
+# SOTA Evolution Loop
 
-Autonomous Claude Code plugin that validates ALL features of a project against
-evidence-based SOTA thresholds. Researches current state-of-the-art, identifies
-gaps, proposes fixes, retests, and iterates with keep/discard pattern until all
-quality gates pass.
+Autonomous Claude Code plugin that evolves ALL features of a project toward
+evidence-based SOTA thresholds. Researches current state-of-the-art, implements
+improvements with TDD (RED/GREEN), tests on the real system with OAuth, and
+iterates with keep/discard pattern until SOTA.
 
 ## Install
 
 ```bash
-claude install /path/to/sota-validation-loop
+claude install /path/to/sota-evolution-loop
 # or
-claude install paulohenriquevn/sota-validation-loop
+claude install paulohenriquevn/sota-evolution-loop
 ```
 
 ## Prerequisites
@@ -23,7 +23,7 @@ Your project needs two TOML files:
 ## Quick Start
 
 ```bash
-# Start the autonomous validation loop
+# Start the autonomous evolution loop
 /sota-loop --max-cycles 3 --budget 20
 
 # Check status at any time
@@ -38,7 +38,7 @@ Your project needs two TOML files:
 ```
 ┌──────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌──────────┐  ┌─────────┐
 │ Phase 0   │─▶│ Phase 1  │─▶│ Phase 2  │─▶│ Phase 3  │─▶│ Phase 4   │─▶│ Phase 5  │
-│ RESEARCH  │  │ PROBE    │  │ ANALYZE  │  │ REFINE   │  │ VALIDATE  │  │ REPORT   │
+│ RESEARCH  │  │ PROBE    │  │ ANALYZE  │  │ REFINE   │  │ VERIFY    │  │ REPORT   │
 │ Deep SOTA │  │ Run E2E  │  │ Find gap │  │ Fix it   │  │ Keep or   │  │ Summary  │
 │ research  │  │ probes   │  │ root     │  │ with TDD │  │ discard   │  │          │
 └──────────┘  └─────────┘  │ cause    │  │          │  └──────────┘  └─────────┘
@@ -88,7 +88,7 @@ Concrete probe scripts in `scripts/probe-runner.sh` test:
 ## Architecture
 
 ```
-sota-validation-loop/
+sota-evolution-loop/
 ├── hooks/
 │   ├── hooks.json           # Stop hook registration
 │   └── stop-hook.sh         # Autonomous loop engine (v2)
@@ -98,13 +98,13 @@ sota-validation-loop/
 │   ├── sota-cancel.md       # /sota-cancel — stop the loop
 │   └── help.md              # /help — explain the system
 ├── agents/
-│   ├── chief-validator.md   # Orchestrator — meetings, strategy
+│   ├── chief-evolver.md     # Orchestrator — meetings, strategy
 │   ├── sota-researcher.md   # Phase 0 — deep SOTA research
 │   ├── e2e-prober.md        # Phase 1 — run deterministic probes
 │   ├── gap-analyzer.md      # Phase 2 — weighted scoring algorithm
 │   ├── hypothesis-generator.md  # Phase 3 — validated hypothesis
 │   ├── implementation-coder.md  # Phase 3 — apply fix with TDD
-│   ├── validation-runner.md # Phase 4 — baseline comparison + DISCARD
+│   ├── evolution-verifier.md # Phase 4 — baseline comparison + DISCARD
 │   ├── quality-evaluator.md # Gates — score phases with verification
 │   └── report-writer.md     # Phase 5 — final report
 ├── templates/
@@ -150,7 +150,7 @@ sota-output/
 ├── progress/
 │   └── history.jsonl  # Every iteration logged
 └── report/
-    └── sota-validation-report.md
+    └── sota-evolution-report.md
 ```
 
 ## Configuration
