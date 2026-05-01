@@ -5,40 +5,35 @@ user-invocable: true
 allowed-tools: Read
 ---
 
-# SOTA Validation Loop — Help
+# SOTA Evolution Loop — Help
 
 ## What It Does
 
-Autonomous loop that validates ALL features of your project against evidence-based SOTA thresholds. It:
+Autonomous loop that **evolves** the system until ALL features reach SOTA
+thresholds. It doesn't just validate — it writes real production code (Rust,
+tests, modules) to close every gap. Feature by feature, crate by crate.
 
-0. **Researches** current state-of-the-art — verifies thresholds are fresh
-1. **Probes** every feature using deterministic probe scripts
-2. **Analyzes** results with weighted scoring to identify the worst gap
-3. **Refines** the weakest feature with targeted TDD improvements
-4. **Validates** using persisted baselines — keep/discard with deterministic rollback
-5. **Reports** final state with progress history and stall analysis
+**The target is SOTA. "Working" is not enough.**
 
-Iterates until all dod-gates pass, stall detected, or max cycles reached.
-
-## 6-Phase State Machine
+## 6-Phase Evolution Cycle
 
 ```
-Phase 0: RESEARCH  → Deep SOTA research, update thresholds with fresh evidence
-Phase 1: PROBE     → Run deterministic probe scripts + manual probes
-Phase 2: ANALYZE   → Weighted scoring algorithm, root cause at file:line
-Phase 3: REFINE    → Validated hypothesis + TDD fix (baseline auto-saved)
-Phase 4: VALIDATE  → Compare against baseline, DISCARD → git rollback
-Phase 5: REPORT    → Final report with progress trends
+Phase 0: RESEARCH  → Read docs/pesquisas/, consult domain architects, verify thresholds
+Phase 1: PROBE     → Run deterministic probes against ALL features
+Phase 2: ANALYZE   → Weighted scoring, root cause at file:line, consult domain architect
+Phase 3: EVOLVE    → Read SOTA research + reference repos → write fix with TDD
+Phase 4: VALIDATE  → Compare before/after → KEEP or DISCARD (git rollback)
+Phase 5: REPORT    → Progress report → LOOP BACK if features still failing
 
-Loop-back: If features still failing → return to Phase 1
-Stop: All pass, stall detected, budget exhausted, or max cycles
+Loop-back: features failing → return to Phase 1 → next worst feature
+Stop: ALL DOD-gates pass | stall (2 cycles, 0 progress) | budget exhausted
 ```
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `/sota-loop` | Start the validation loop |
+| `/sota-loop` | Start the evolution loop |
 | `/sota-status` | View current phase, features, budget |
 | `/sota-cancel` | Cancel the loop (preserves output) |
 | `/help` | This help text |
@@ -55,28 +50,51 @@ Stop: All pass, stall detected, budget exhausted, or max cycles
   --completion-done TEXT  Promise text that terminates the loop
 ```
 
-## Key Principles
+## How It Evolves (not just validates)
 
-- **Deep Research**: Phase 0 ensures thresholds are actually SOTA, not stale
-- **Deterministic probes**: `scripts/probe-runner.sh` — repeatable, not ad-hoc
-- **Weighted scoring**: Gap analysis uses concrete 40%/30%/20%/10% weights
-- **Validated hypotheses**: File paths verified via `ls`/`grep` before proposing
-- **Deterministic rollback**: `<!-- DISCARD -->` → `git checkout` via hook
-- **Baseline persistence**: JSON snapshots for accurate before/after comparison
-- **Stall detection**: No progress for 2 cycles → auto-stop
-- **Evidence-based**: Every threshold cites a research paper or internal benchmark
+| Step | What happens |
+|------|-------------|
+| Gap found | Consults domain architect + reads `docs/pesquisas/<domain>/` |
+| Fix proposed | Grounded in SOTA research + reference repo patterns |
+| Code written | Real Rust production code with TDD (RED→GREEN→REFACTOR) |
+| Code validated | `cargo test` + `cargo clippy` + `make check-arch` + `make check-unwrap` |
+| Regression? | Deterministic rollback via `git checkout -- .` |
+| Feature passes? | Next worst feature. Loop continues. |
 
-## Agents (9 specialists)
+## Resources Used
 
-1. **sota-researcher** — Phase 0: Deep SOTA research, threshold verification
-2. **e2e-prober** — Phase 1: Runs deterministic probe scripts
-3. **gap-analyzer** — Phase 2: Weighted scoring, root cause at file:line
-4. **hypothesis-generator** — Phase 3: Validated hypothesis with path checks
-5. **implementation-coder** — Phase 3: Applies fix with strict TDD
-6. **validation-runner** — Phase 4: Baseline comparison, DISCARD marker
-7. **quality-evaluator** — Gates: Scores phases with verification commands
-8. **report-writer** — Phase 5: Final report with progress trends
-9. **chief-validator** — Orchestrator: meetings, strategy, loop-back/stop
+### 17 Domain Architects (`.claude/agents/*-architect`)
+Each monitors SOTA alignment for its domain. The loop consults the relevant
+architect before every fix: agent-loop, subagents, context, memory, providers,
+model-routing, tools, wiki, CLI, debug, languages, security-governance,
+observability, prompt-engineering, self-evolution, evals, agents.
+
+### CTO Architect (`cto-architect`)
+Verifies every completed phase: exists? implemented? usable? SOTA? integrated? data-driven?
+
+### Edge Case Architect (`edge-case-architect`)
+Validates robustness of fixes: empty inputs, crash recovery, concurrency, permissions.
+
+### SOTA Research (`docs/pesquisas/`)
+18 research domains. Every fix cites its research basis.
+
+### 11 Gate Scripts (`make check-*`)
+Architecture, unwrap, panic, unsafe, sizes, secrets, changelog, complexity,
+I/O tests, SOTA DoD (quick and full).
+
+## Plugin Agents (9 internal)
+
+| Agent | Phase | Role |
+|-------|-------|------|
+| `chief-validator` | All | Orchestrator — meetings, strategy, delegates to domain architects |
+| `sota-researcher` | 0 | Deep SOTA research via domain architects + papers |
+| `e2e-prober` | 1 | Runs deterministic probe scripts |
+| `gap-analyzer` | 2 | Weighted scoring + domain architect consultation |
+| `hypothesis-generator` | 3 | SOTA-grounded fix proposal |
+| `implementation-coder` | 3 | Writes production Rust with TDD |
+| `validation-runner` | 4 | Baseline comparison, KEEP/DISCARD |
+| `quality-evaluator` | Gates | Scores phases 0.0-1.0, repeats if < 0.7 |
+| `report-writer` | 5 | Final report with trends |
 
 ## Output Structure
 
@@ -84,10 +102,10 @@ Stop: All pass, stall detected, budget exhausted, or max cycles
 sota-output/
 ├── research/     # Phase 0 research reports
 ├── probes/       # Deterministic probe JSON results
-├── analysis/     # Phase 2 gap analysis
-├── baselines/    # Pre-fix snapshots
-├── progress/     # history.jsonl (every iteration)
-└── report/       # Final validation report
+├── analysis/     # Phase 2 gap analysis (with SOTA citations)
+├── baselines/    # Pre-fix JSON snapshots
+├── progress/     # history.jsonl (every iteration logged)
+└── report/       # Final evolution report
 ```
 
 ## Tests
