@@ -9,7 +9,7 @@ You are the Implementation Coder — you apply fixes to the **real Theo Code
 Rust workspace**. Every change you make is production code that ships.
 
 Your code must be **SOTA-aligned** — not just working, but following the
-patterns validated by research in `docs/pesquisas/` and reference repos.
+patterns validated by research in `docs/technical/` and reference repos.
 
 ## Autonomy Rule
 
@@ -29,7 +29,7 @@ cat {output_dir}/plans/plan-iteration-N.md
 cat {output_dir}/analysis/gap-iteration-N.md
 
 # 2. Read the SOTA research for this domain
-cat docs/pesquisas/<domain>/INDEX.md
+cat docs/technical/<domain>/INDEX.md
 
 # 3. Read the reference implementation
 # (the hypothesis tells you which reference repo/file to check)

@@ -64,33 +64,33 @@ For EACH category, invoke the domain architect AND research the crate:
 
 | Category | Domain Architect | Crate(s) | Research Dir |
 |----------|-----------------|----------|--------------|
-| Memory | `memory-architect` | `theo-infra-memory`, `theo-domain` | `docs/pesquisas/memory/` |
-| Agent Loop | `agent-loop-architect` | `theo-agent-runtime` | `docs/pesquisas/agent-loop/` |
-| Context Eng. | `context-architect` | `theo-engine-retrieval`, `theo-engine-graph` | `docs/pesquisas/context/` |
-| Model Routing | `model-routing-architect` | `theo-infra-llm`, `theo-domain` | `docs/pesquisas/model-routing/` |
-| Self-Evolution | `self-evolution-architect` | `theo-agent-runtime` | `docs/pesquisas/self-evolution/` |
-| Prompt Eng. | `prompt-engineering-architect` | `theo-agent-runtime`, `theo-tooling` | `docs/pesquisas/prompt-engineering/` |
-| Tools | `tools-architect` | `theo-tooling` | `docs/pesquisas/tools/` |
-| Sub-agents | `subagents-architect` | `theo-agent-runtime` | `docs/pesquisas/subagents/` |
-| Security | `security-governance-architect` | `theo-governance`, `theo-isolation` | `docs/pesquisas/security-governance/` |
-| Observability | `observability-architect` | `theo-agent-runtime` | `docs/pesquisas/observability/` |
-| Wiki | `wiki-architect` | `theo-engine-wiki` | `docs/pesquisas/wiki/` |
-| Providers | `providers-architect` | `theo-infra-llm`, `theo-infra-auth` | `docs/pesquisas/providers/` |
-| CLI | `cli-architect` | `apps/theo-cli` | `docs/pesquisas/cli/` |
-| Debug/DAP | `debug-architect` | `theo-tooling` | `docs/pesquisas/debug/` |
-| Languages | `languages-architect` | `theo-engine-parser` | `docs/pesquisas/languages/` |
-| Evals | `evals-architect` | `apps/theo-benchmark` | `docs/pesquisas/evals/` |
-| Task/Plan | `agents-architect` | `theo-tooling` | `docs/pesquisas/agents/` |
+| Memory | `memory-architect` | `theo-infra-memory`, `theo-domain` | `docs/technical/memory/` |
+| Agent Loop | `agent-loop-architect` | `theo-agent-runtime` | `docs/technical/agent-loop/` |
+| Context Eng. | `context-architect` | `theo-engine-retrieval`, `theo-engine-graph` | `docs/technical/context/` |
+| Model Routing | `model-routing-architect` | `theo-infra-llm`, `theo-domain` | `docs/technical/model-routing/` |
+| Self-Evolution | `self-evolution-architect` | `theo-agent-runtime` | `docs/technical/self-evolution/` |
+| Prompt Eng. | `prompt-engineering-architect` | `theo-agent-runtime`, `theo-tooling` | `docs/technical/prompt-engineering/` |
+| Tools | `tools-architect` | `theo-tooling` | `docs/technical/tools/` |
+| Sub-agents | `subagents-architect` | `theo-agent-runtime` | `docs/technical/subagents/` |
+| Security | `security-governance-architect` | `theo-governance`, `theo-isolation` | `docs/technical/security-governance/` |
+| Observability | `observability-architect` | `theo-agent-runtime` | `docs/technical/observability/` |
+| Wiki | `wiki-architect` | `theo-engine-wiki` | `docs/technical/wiki/` |
+| Providers | `providers-architect` | `theo-infra-llm`, `theo-infra-auth` | `docs/technical/providers/` |
+| CLI | `cli-architect` | `apps/theo-cli` | `docs/technical/cli/` |
+| Debug/DAP | `debug-architect` | `theo-tooling` | `docs/technical/debug/` |
+| Languages | `languages-architect` | `theo-engine-parser` | `docs/technical/languages/` |
+| Evals | `evals-architect` | `apps/theo-benchmark` | `docs/technical/evals/` |
+| Task/Plan | `agents-architect` | `theo-tooling` | `docs/technical/agents/` |
 
 **Protocol per category:**
-1. Read the domain's `docs/pesquisas/<domain>/INDEX.md`
+1. Read the domain's `docs/technical/<domain>/INDEX.md`
 2. Invoke the domain architect agent for SOTA alignment assessment
 3. Cross-reference with reference repos in `referencias/INDEX.md`
 4. Update thresholds with findings
 
 ### Step 3: Search the Theo Code research files
 
-Read the existing research in `docs/pesquisas/`:
+Read the existing research in `docs/technical/`:
 - `agent-memory-sota.md` — Memory architecture (CoALA, MemGPT, Mem0, Zep)
 - `agent-memory-plan.md` — Memory roadmap RM0-RM5b with acceptance criteria
 - `context-engine.md` — Context engine spec with performance targets

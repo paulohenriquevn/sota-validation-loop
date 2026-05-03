@@ -64,7 +64,7 @@ For the TOP scored feature:
 Before finalizing root cause analysis, invoke the relevant **domain architect**
 from `.claude/agents/` for SOTA-aligned insight:
 
-- The domain architect knows the research in `docs/pesquisas/<domain>/` deeply
+- The domain architect knows the research in `docs/technical/<domain>/` deeply
 - They can validate whether the proposed fix direction aligns with SOTA
 - They know which reference repos have solved similar problems
 - Ask them: "Is this the right fix? Does SOTA research suggest a better approach?"
@@ -88,9 +88,9 @@ When a feature has status `untested` or `fail` because the CODE DOES NOT EXIST:
 - This is NOT a skip — it is the HIGHEST priority gap.
 - The hypothesis must propose CREATING the code, not waiting.
 - Read the relevant reference repos to find HOW to implement:
-  - Memory → `referencias/hermes-agent/agent/memory_provider.py`, `docs/pesquisas/agent-memory-plan.md`
-  - Routing → `referencias/hermes-agent/agent/smart_model_routing.py`, `docs/pesquisas/smart-model-routing.md`
-  - Sub-agents → `referencias/opendev/crates/`, `docs/pesquisas/sota-subagent-architectures.md`
+  - Memory → `referencias/hermes-agent/agent/memory_provider.py`, `docs/technical/agent-memory-plan.md`
+  - Routing → `referencias/hermes-agent/agent/smart_model_routing.py`, `docs/technical/smart-model-routing.md`
+  - Sub-agents → `referencias/opendev/crates/`, `docs/technical/sota-subagent-architectures.md`
   - Tools → `referencias/opendev/`, `referencias/hermes-agent/tools/`
   - Workflows → `../theo/referencias/get-shit-done/`, `../theo/referencias/superpowers/`
 - **Adapt the pattern to Rust** following SOLID/DRY/KISS principles.

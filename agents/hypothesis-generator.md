@@ -20,31 +20,31 @@ grounded in SOTA research and verified by domain architects.
 4. **Read the SOTA research** — MANDATORY before proposing any fix:
    ```bash
    # Find the relevant research
-   ls docs/pesquisas/<domain>/
-   cat docs/pesquisas/<domain>/INDEX.md
+   ls docs/technical/<domain>/
+   cat docs/technical/<domain>/INDEX.md
    ```
 5. **Consult the domain architect** — invoke the relevant architect agent from
    `.claude/agents/` to get SOTA-aligned recommendations:
 
    | Feature Category | Domain Architect | Research Dir |
    |-----------------|-----------------|--------------|
-   | Memory | `memory-architect` | `docs/pesquisas/memory/` |
-   | Agent Loop | `agent-loop-architect` | `docs/pesquisas/agent-loop/` |
-   | Context/Retrieval | `context-architect` | `docs/pesquisas/context/` |
-   | Model Routing | `model-routing-architect` | `docs/pesquisas/model-routing/` |
-   | Tools | `tools-architect` | `docs/pesquisas/tools/` |
-   | Sub-agents | `subagents-architect` | `docs/pesquisas/subagents/` |
-   | Security | `security-governance-architect` | `docs/pesquisas/security-governance/` |
-   | Observability | `observability-architect` | `docs/pesquisas/observability/` |
-   | Wiki | `wiki-architect` | `docs/pesquisas/wiki/` |
-   | Providers | `providers-architect` | `docs/pesquisas/providers/` |
-   | CLI | `cli-architect` | `docs/pesquisas/cli/` |
-   | Debug/DAP | `debug-architect` | `docs/pesquisas/debug/` |
-   | Languages | `languages-architect` | `docs/pesquisas/languages/` |
-   | Prompt Eng. | `prompt-engineering-architect` | `docs/pesquisas/prompt-engineering/` |
-   | Self-Evolution | `self-evolution-architect` | `docs/pesquisas/self-evolution/` |
-   | Evals | `evals-architect` | `docs/pesquisas/evals/` |
-   | Task/Plan | `agents-architect` | `docs/pesquisas/agents/` |
+   | Memory | `memory-architect` | `docs/technical/memory/` |
+   | Agent Loop | `agent-loop-architect` | `docs/technical/agent-loop/` |
+   | Context/Retrieval | `context-architect` | `docs/technical/context/` |
+   | Model Routing | `model-routing-architect` | `docs/technical/model-routing/` |
+   | Tools | `tools-architect` | `docs/technical/tools/` |
+   | Sub-agents | `subagents-architect` | `docs/technical/subagents/` |
+   | Security | `security-governance-architect` | `docs/technical/security-governance/` |
+   | Observability | `observability-architect` | `docs/technical/observability/` |
+   | Wiki | `wiki-architect` | `docs/technical/wiki/` |
+   | Providers | `providers-architect` | `docs/technical/providers/` |
+   | CLI | `cli-architect` | `docs/technical/cli/` |
+   | Debug/DAP | `debug-architect` | `docs/technical/debug/` |
+   | Languages | `languages-architect` | `docs/technical/languages/` |
+   | Prompt Eng. | `prompt-engineering-architect` | `docs/technical/prompt-engineering/` |
+   | Self-Evolution | `self-evolution-architect` | `docs/technical/self-evolution/` |
+   | Evals | `evals-architect` | `docs/technical/evals/` |
+   | Task/Plan | `agents-architect` | `docs/technical/agents/` |
 
 6. **Check reference repos** — how do similar systems solve this?
    ```bash
@@ -91,7 +91,7 @@ as a series of steps. Each step is one hypothesis → one implementation cycle.
 
 **Target feature**: memory.meta_memory_engine
 **Domain**: memory
-**Research consulted**: `docs/pesquisas/memory/agent-memory-sota.md` — CoALA taxonomy
+**Research consulted**: `docs/technical/memory/agent-memory-sota.md` — CoALA taxonomy
 **Reference pattern**: `referencias/hermes-agent/agent/memory_manager.py:83-374` (fan-out coordinator)
 **Domain architect assessment**: memory-architect confirms MemoryEngine coordinator is RM1 priority
 

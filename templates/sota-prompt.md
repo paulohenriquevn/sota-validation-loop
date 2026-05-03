@@ -109,23 +109,23 @@ for SOTA-aligned decisions.
 
 | Domain | Architect Agent | Crate(s) | Research |
 |--------|----------------|----------|----------|
-| Agent Loop | `agent-loop-architect` | `theo-agent-runtime` | `docs/pesquisas/agent-loop/` |
-| Sub-agents | `subagents-architect` | `theo-agent-runtime` | `docs/pesquisas/subagents/` |
-| Task/Plan Mgmt | `agents-architect` | `theo-tooling` | `docs/pesquisas/agents/` |
-| Context/Retrieval | `context-architect` | `theo-engine-retrieval`, `theo-engine-graph` | `docs/pesquisas/context/` |
-| Languages | `languages-architect` | `theo-engine-parser` | `docs/pesquisas/languages/` |
-| Wiki | `wiki-architect` | `theo-engine-wiki` | `docs/pesquisas/wiki/` |
-| Memory | `memory-architect` | `theo-infra-memory` | `docs/pesquisas/memory/` |
-| Providers | `providers-architect` | `theo-infra-llm` | `docs/pesquisas/providers/` |
-| Model Routing | `model-routing-architect` | `theo-infra-llm` | `docs/pesquisas/model-routing/` |
-| Observability | `observability-architect` | `theo-agent-runtime` | `docs/pesquisas/observability/` |
-| Prompt Eng. | `prompt-engineering-architect` | `theo-agent-runtime` | `docs/pesquisas/prompt-engineering/` |
-| Security | `security-governance-architect` | `theo-governance`, `theo-isolation` | `docs/pesquisas/security-governance/` |
-| CLI | `cli-architect` | `apps/theo-cli` | `docs/pesquisas/cli/` |
-| Tools | `tools-architect` | `theo-tooling` | `docs/pesquisas/tools/` |
-| Debug/DAP | `debug-architect` | `theo-tooling` | `docs/pesquisas/debug/` |
-| Evals | `evals-architect` | `apps/theo-benchmark` | `docs/pesquisas/evals/` |
-| Self-Evolution | `self-evolution-architect` | cross-domain | `docs/pesquisas/self-evolution/` |
+| Agent Loop | `agent-loop-architect` | `theo-agent-runtime` | `docs/technical/agent-loop/` |
+| Sub-agents | `subagents-architect` | `theo-agent-runtime` | `docs/technical/subagents/` |
+| Task/Plan Mgmt | `agents-architect` | `theo-tooling` | `docs/technical/agents/` |
+| Context/Retrieval | `context-architect` | `theo-engine-retrieval`, `theo-engine-graph` | `docs/technical/context/` |
+| Languages | `languages-architect` | `theo-engine-parser` | `docs/technical/languages/` |
+| Wiki | `wiki-architect` | `theo-engine-wiki` | `docs/technical/wiki/` |
+| Memory | `memory-architect` | `theo-infra-memory` | `docs/technical/memory/` |
+| Providers | `providers-architect` | `theo-infra-llm` | `docs/technical/providers/` |
+| Model Routing | `model-routing-architect` | `theo-infra-llm` | `docs/technical/model-routing/` |
+| Observability | `observability-architect` | `theo-agent-runtime` | `docs/technical/observability/` |
+| Prompt Eng. | `prompt-engineering-architect` | `theo-agent-runtime` | `docs/technical/prompt-engineering/` |
+| Security | `security-governance-architect` | `theo-governance`, `theo-isolation` | `docs/technical/security-governance/` |
+| CLI | `cli-architect` | `apps/theo-cli` | `docs/technical/cli/` |
+| Tools | `tools-architect` | `theo-tooling` | `docs/technical/tools/` |
+| Debug/DAP | `debug-architect` | `theo-tooling` | `docs/technical/debug/` |
+| Evals | `evals-architect` | `apps/theo-benchmark` | `docs/technical/evals/` |
+| Self-Evolution | `self-evolution-architect` | cross-domain | `docs/technical/self-evolution/` |
 
 **Leadership:**
 - `cto-architect` — Truth guardian. Verifies: feature exists? 100% implemented? 100% usable? SOTA-backed? Integrated? Data-driven?
@@ -210,7 +210,7 @@ Code → Tree-Sitter Parse → Code Graph → [BM25, Dense, Graph Attention, Pag
 a code-specific model (Jina Code v2 or Voyage Code 3). AllMiniLM is 15-25 points
 behind code-specific models on code retrieval benchmarks.
 
-**Evidence base:** `docs/pesquisas/context/code-retrieval-deep-research.md` (963 lines, 68 sources)
+**Evidence base:** `docs/technical/context/code-retrieval-deep-research.md` (963 lines, 68 sources)
 
 **Key research findings:**
 - Claude Code abandoned RAG/vector DB for grep + agentic reasoning
@@ -228,7 +228,7 @@ behind code-specific models on code retrieval benchmarks.
 
 ### Critical Module: Wiki System (for HUMANS, not for the agent)
 
-Read `docs/pesquisas/wiki/INDEX.md` and `docs/pesquisas/wiki/wiki-system-sota.md` before working on wiki features.
+Read `docs/technical/wiki/INDEX.md` and `docs/technical/wiki/wiki-system-sota.md` before working on wiki features.
 
 **What it is:** LLM-compiled wiki so HUMANS can understand codebases in hours, not weeks.
 The agent reads code directly — it doesn't need a wiki. HUMANS need it.
@@ -276,12 +276,12 @@ it alive automatically via an agent.
 You MUST base every design decision on evidence from these sources.
 Do not invent patterns — find them in the references first.
 
-#### Research Library (`docs/pesquisas/`) — organized by domain
+#### Research Library (`docs/technical/`) — organized by domain
 
 Each domain has an `INDEX.md` with: scope, target crates, references, gaps to research.
 
 ```
-docs/pesquisas/
+docs/technical/
 ├── memory/                   # CoALA, MemGPT, Mem0, Zep, Karpathy Wiki
 │   ├── INDEX.md              # Scope + references + gaps
 │   ├── agent-memory-sota.md  # Full SOTA report
@@ -434,7 +434,7 @@ ensures thresholds are actually SOTA — not stale numbers.
 
 1. Read `docs/sota-thresholds.toml` — audit every threshold
 2. Read `docs/feature-registry.toml` — audit feature coverage
-3. Read research files in `docs/pesquisas/` — extract latest evidence
+3. Read research files in `docs/technical/` — extract latest evidence
 4. Read reference repos in `referencias/INDEX.md` — compare patterns
 5. For each threshold older than 90 days: search for updated values
 6. For each feature category: verify we cover SOTA capabilities
@@ -519,7 +519,7 @@ Create an evolution plan BEFORE writing any code. The plan is the contract
 between analysis and implementation — no code without a plan.
 
 1. Read the gap analysis from Phase 2
-2. Read the SOTA research for the target domain (`docs/pesquisas/<domain>/`)
+2. Read the SOTA research for the target domain (`docs/technical/<domain>/`)
 3. Read the reference implementation (from `referencias/` or the research)
 4. Consult the relevant domain architect for SOTA-aligned approach
 5. Write the evolution plan to `{output_dir}/plans/plan-iteration-N.md` with:
@@ -534,7 +534,7 @@ between analysis and implementation — no code without a plan.
 - **SOTA target**: <threshold from docs/sota-thresholds.toml>
 
 ### Research Basis
-- **Paper/doc**: <source in docs/pesquisas/>
+- **Paper/doc**: <source in docs/technical/>
 - **Reference pattern**: <repo/file:line>
 - **Domain architect assessment**: <architect recommendation>
 
@@ -687,7 +687,7 @@ O loop existe para levar o sistema inteiro ao nível SOTA. Isso significa:
 - **Se uma feature não tem código ainda (status=untested), IMPLEMENTE-A.** Não marque skip.
 - **O loop só termina quando**: todos os DOD-gates passam, OU budget acaba, OU stall real (2 ciclos sem progresso).
 - **Features que faltam implementar (memory, routing, self-evolution) são o trabalho principal**, não extras opcionais.
-- **Use as referências** (`referencias/`, `docs/pesquisas/`) para saber COMO implementar. Não invente — adapte do SOTA.
+- **Use as referências** (`referencias/`, `docs/technical/`) para saber COMO implementar. Não invente — adapte do SOTA.
 
 ## Critical Rules
 

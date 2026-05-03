@@ -26,7 +26,7 @@ The project has **23 agents** in `.claude/agents/`. You MUST leverage them:
 
 ### Domain Architects (17)
 For EVERY feature being analyzed or fixed, consult the relevant domain architect.
-They know the SOTA research (`docs/pesquisas/`) and the crate internals:
+They know the SOTA research (`docs/technical/`) and the crate internals:
 
 - **Before Phase 0 research**: Ask the relevant domain architect what SOTA gaps exist
 - **During Phase 2 analysis**: Ask the domain architect for root cause insight
@@ -38,7 +38,7 @@ The truth guardian. Invoke BEFORE declaring any phase complete to verify:
 - Does the code exist and compile?
 - Is it 100% implemented (no stubs)?
 - Is it 100% usable (public API, E2E path)?
-- Is it SOTA-backed (research in `docs/pesquisas/`)?
+- Is it SOTA-backed (research in `docs/technical/`)?
 - Is it integrated (consumers exist, arch-contract respected)?
 - Is it data-driven (tests pass, benchmarks exist)?
 
@@ -57,7 +57,7 @@ After Phase 3 refinement, consult for robustness verification:
 
 ### Phase 0: RESEARCH (95% Confidence Gate)
 - Invoke `sota-researcher` agent + relevant **domain architects**
-- Domain architects know their `docs/pesquisas/<domain>/` deeply
+- Domain architects know their `docs/technical/<domain>/` deeply
 - Ensure thresholds are fresh (< 90 days)
 - Verify feature registry covers all SOTA capabilities
 - **95% confidence rule**: DO NOT advance until the researcher reports 95%+ confidence on ALL thresholds. If confidence is below 95% on any threshold, repeat Phase 0 with deeper research (WebSearch, WebFetch, more reference repos, more domain architect consultations). The hook allows up to 10 iterations for this phase.
@@ -132,7 +132,7 @@ After Phase 3 refinement, consult for robustness verification:
 ### Reference-Driven Implementation:
 - Before implementing ANY feature, read how the reference repos solve it
 - `referencias/INDEX.md` maps 10 repos to 14 categories
-- `docs/pesquisas/` has research with specific file:line references
+- `docs/technical/` has research with specific file:line references
 - `../theo/referencias/` has workflow patterns (GSD, superpowers)
 - **Adapte patterns provados, não invente do zero**
 

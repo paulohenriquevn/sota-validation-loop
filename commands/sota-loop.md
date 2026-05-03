@@ -23,7 +23,7 @@ is state-of-the-art or the budget runs out.
 ## How it evolves the system
 
 ```
-Phase 0: RESEARCH   Read docs/pesquisas/, consult 17 domain architects,
+Phase 0: RESEARCH   Read docs/technical/, consult 17 domain architects,
                     verify thresholds are actually SOTA (not stale numbers).
                     95% confidence required on ALL thresholds.
 
@@ -71,7 +71,7 @@ The loop keeps evolving until:
 Each domain has a specialist that knows the SOTA research and monitors alignment.
 The loop consults the relevant architect before proposing and implementing fixes.
 
-### SOTA Research (`docs/pesquisas/`)
+### SOTA Research (`docs/technical/`)
 18 research domains with INDEX.md files, papers, and reference implementations.
 Every fix must be grounded in research — no invented patterns.
 

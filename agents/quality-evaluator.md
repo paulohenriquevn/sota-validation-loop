@@ -59,7 +59,7 @@ flags missing E2E coverage early.
 | Tasks defined | 0.30 | Does the plan have concrete tasks (T1, T2, ...)? | Count tasks in plan file |
 | Acceptance criteria | 0.25 | Does EVERY task have ACs (observable, verifiable)? | Check for `- [ ]` under each task |
 | DoD per task | 0.20 | Does EVERY task have DoD (test, clippy, arch)? | Check for DoD section per task |
-| SOTA grounding | 0.15 | Is the plan grounded in research + reference repos? | Check for `docs/pesquisas/` and `referencias/` refs |
+| SOTA grounding | 0.15 | Is the plan grounded in research + reference repos? | Check for `docs/technical/` and `referencias/` refs |
 | Edge cases addressed | 0.10 | Were edge cases reviewed (via `/edge-case-plan`)? | Check for edge case section |
 
 **Automatic failure**: Plan without ANY acceptance criteria = score 0.0

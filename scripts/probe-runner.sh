@@ -297,7 +297,7 @@ probe_languages() {
 # CATEGORY: CONTEXT ENGINE (theo-engine-retrieval — graph-augmented agentic retrieval)
 # Objective: Structural intelligence derived FROM code, exposed as tool backends
 # Ref: crates/theo-engine-retrieval/README.md
-# Ref: docs/pesquisas/context/code-retrieval-deep-research.md (963 lines, 68 sources)
+# Ref: docs/technical/context/code-retrieval-deep-research.md (963 lines, 68 sources)
 # ============================================================================
 probe_context() {
   echo "=== CONTEXT ENGINE (theo-engine-retrieval — graph-augmented retrieval) ==="

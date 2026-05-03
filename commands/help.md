@@ -18,7 +18,7 @@ tests, modules) to close every gap. Feature by feature, crate by crate.
 ## 7-Phase Evolution Cycle (Phases 0–6)
 
 ```
-Phase 0: RESEARCH  → Read docs/pesquisas/, consult domain architects, 95% confidence
+Phase 0: RESEARCH  → Read docs/technical/, consult domain architects, 95% confidence
 Phase 1: PROBE     → Run deterministic probes against ALL features
 Phase 2: ANALYZE   → Weighted scoring, root cause at file:line, consult domain architect
 Phase 3: PLAN      → Evolution plan with tasks, acceptance criteria, DoDs, edge cases
@@ -55,7 +55,7 @@ Stop: ALL DOD-gates pass | stall (2 cycles, 0 progress) | budget exhausted
 
 | Step | What happens |
 |------|-------------|
-| Gap found | Consults domain architect + reads `docs/pesquisas/<domain>/` |
+| Gap found | Consults domain architect + reads `docs/technical/<domain>/` |
 | Fix proposed | Grounded in SOTA research + reference repo patterns |
 | Code written | Real Rust production code with TDD (RED→GREEN→REFACTOR) |
 | Code verified | `cargo test` + `cargo clippy` + `make check-arch` + `make check-unwrap` |
@@ -76,7 +76,7 @@ Verifies every completed phase: exists? implemented? usable? SOTA? integrated? d
 ### Edge Case Architect (`edge-case-architect`)
 Verifies robustness of fixes: empty inputs, crash recovery, concurrency, permissions.
 
-### SOTA Research (`docs/pesquisas/`)
+### SOTA Research (`docs/technical/`)
 18 research domains. Every fix cites its research basis.
 
 ### 11 Gate Scripts (`make check-*`)
