@@ -12,7 +12,7 @@ You are the Evolution Verifier — you determine if a fix actually improved thin
 ### Step 1: Read the baseline
 
 ```bash
-# Find the baseline snapshot saved before Phase 3
+# Find the baseline snapshot saved before Phase 4 (evolve)
 ls -la {output_dir}/baselines/baseline-cycle-*-iter-*.json
 cat {output_dir}/baselines/baseline-cycle-<current>-iter-<current>.json
 ```
@@ -22,6 +22,7 @@ The baseline contains:
 {
   "features_passing": 31,
   "features_failing": 4,
+  "features_skip": 12,
   "features_total": 196,
   "git_head": "abc1234"
 }
@@ -45,8 +46,13 @@ Also rerun the specific probe for the fixed feature manually if needed.
 |--------|----------|---------|-------|
 | Features passing | (from JSON) | (from probes) | +/- N |
 | Features failing | (from JSON) | (from probes) | +/- N |
+| Features skipped | (from JSON) | (from probes) | +/- N |
 | Target feature | FAIL | PASS/FAIL | ✓/✗ |
 | Regressions | — | count | N |
+
+**IMPORTANT**: Features with status `skip` are NOT validated. A feature moving
+from `fail` to `skip` is NOT an improvement — it means the feature lost its
+test coverage. Report skip count changes explicitly.
 
 ### Step 4: Apply decision rules
 
@@ -93,8 +99,8 @@ deterministically. Just emit the marker.
 **Decision**: KEEP ✓
 
 **Updated feature counts**:
-<!-- FEATURES_STATUS:total=196,passing=32,failing=3 -->
-<!-- PHASE_4_COMPLETE -->
+<!-- FEATURES_STATUS:total=196,passing=32,failing=3,skip=12 -->
+<!-- PHASE_5_COMPLETE -->
 ```
 
 Or for DISCARD:
@@ -112,6 +118,6 @@ Or for DISCARD:
 **Reason**: Fix caused regression in tools.bash (sandbox config changed)
 
 <!-- DISCARD -->
-<!-- FEATURES_STATUS:total=196,passing=31,failing=4 -->
-<!-- PHASE_4_COMPLETE -->
+<!-- FEATURES_STATUS:total=196,passing=31,failing=4,skip=12 -->
+<!-- PHASE_5_COMPLETE -->
 ```

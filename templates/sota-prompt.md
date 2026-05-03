@@ -419,13 +419,13 @@ guidelines — they are hard rules enforced by code review and CI.
 ## Read State First
 
 Before doing ANY work, read `.claude/sota-loop.local.md` to know:
-- Which phase you're in (0-5)
+- Which phase you're in (0-6)
 - Which iteration
 - How many features pass/fail
 - Budget remaining
 - Whether stall was detected
 
-## 6-Phase Protocol
+## 7-Phase Protocol (Phases 0–6)
 
 ### Phase 0: RESEARCH (Deep Research)
 
@@ -513,7 +513,7 @@ Identify the worst-performing feature and root-cause it.
 5. Write analysis to `{output_dir}/analysis/gap-iteration-N.md`
 6. When done: `<!-- PHASE_2_COMPLETE -->`
 
-### Phase 2.5: PLAN
+### Phase 3: PLAN
 
 Create an evolution plan BEFORE writing any code. The plan is the contract
 between analysis and implementation — no code without a plan.
@@ -570,11 +570,11 @@ between analysis and implementation — no code without a plan.
 
 6. Run `/edge-case-plan` on the plan to catch unplanned edge cases
 7. If MUST FIX edge cases found → incorporate into the plan
-8. When done: `<!-- PHASE_2_5_COMPLETE -->`
+8. When done: `<!-- PHASE_3_COMPLETE -->`
 
-### Phase 3: EVOLVE
+### Phase 4: EVOLVE
 
-Execute the plan from Phase 2.5 using TDD. The hook saves a git baseline before this phase.
+Execute the plan from Phase 3 using TDD. The hook saves a git baseline before this phase.
 
 1. Read the evolution plan from `{output_dir}/plans/plan-iteration-N.md`
 2. Execute each task in order, following TDD for each:
@@ -586,9 +586,9 @@ Execute the plan from Phase 2.5 using TDD. The hook saves a git baseline before 
 5. If tests fail or clippy warns → revert and try different approach
 6. **NEVER** modify: allowlists, CLAUDE.md, Makefile, gate scripts
 7. When done (ALL tasks complete, ALL DoDs met): `<!-- PHASE_4_COMPLETE -->`
-8. **Safety net**: Phase 4 (verify) will revert if regressions detected
+8. **Safety net**: Phase 5 (verify) will revert if regressions detected
 
-### Phase 4: VERIFY
+### Phase 5: VERIFY
 
 Rerun probes and decide keep or discard. Rollback is DETERMINISTIC.
 
@@ -613,7 +613,7 @@ Rerun probes and decide keep or discard. Rollback is DETERMINISTIC.
 8. Emit: `<!-- FEATURES_STATUS:total=N,passing=N,failing=N -->`
 9. When done: `<!-- PHASE_5_COMPLETE -->`
 
-### Phase 5: REPORT
+### Phase 6: REPORT
 
 Produce the final evolution report.
 
@@ -640,7 +640,7 @@ If all dod-gates pass OR budget exhausted OR stall detected:
 
 ## Quality Gates
 
-Phases 2-4 have quality gates. The quality evaluator scores your work 0.0-1.0.
+Phases 2-5 have quality gates. The quality evaluator scores your work 0.0-1.0.
 If score < 0.7, the phase repeats with feedback.
 
 Emit after each phase:
@@ -711,10 +711,10 @@ O loop existe para levar o sistema inteiro ao nível SOTA. Isso significa:
 | `<!-- PHASE_0_COMPLETE -->` | Phase 0 (research) done |
 | `<!-- PHASE_1_COMPLETE -->` | Phase 1 (probe) done |
 | `<!-- PHASE_2_COMPLETE -->` | Phase 2 (analyze) done |
-| `<!-- PHASE_2_5_COMPLETE -->` | Phase 2.5 (plan) done — also accepted: `PHASE_3_COMPLETE` |
-| `<!-- PHASE_4_COMPLETE -->` | Phase 3 (evolve) done |
-| `<!-- PHASE_5_COMPLETE -->` | Phase 4 (verify) done |
-| `<!-- PHASE_6_COMPLETE -->` | Phase 5 (report) done |
+| `<!-- PHASE_3_COMPLETE -->` | Phase 3 (plan) done |
+| `<!-- PHASE_4_COMPLETE -->` | Phase 4 (evolve) done |
+| `<!-- PHASE_5_COMPLETE -->` | Phase 5 (verify) done |
+| `<!-- PHASE_6_COMPLETE -->` | Phase 6 (report) done |
 | `<!-- QUALITY_SCORE:0.XX -->` | Quality gate score |
 | `<!-- QUALITY_PASSED:1 -->` | Quality gate passed |
 | `<!-- QUALITY_PASSED:0 -->` | Quality gate failed |

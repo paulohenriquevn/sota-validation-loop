@@ -15,6 +15,8 @@ claude install paulohenriquevn/sota-evolution-loop
 
 ## Prerequisites
 
+- **`python3`** — required by the stop-hook and probe-runner for JSON handling, budget checks, and progress tracking
+
 Your project needs two TOML files:
 
 1. **`docs/sota-thresholds.toml`** — DOD-gates with floors and research citations
@@ -36,19 +38,19 @@ Your project needs two TOML files:
 ## How It Works
 
 ```
-┌──────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌──────────┐  ┌─────────┐
-│ Phase 0   │─▶│ Phase 1  │─▶│ Phase 2  │─▶│ Phase 3  │─▶│ Phase 4   │─▶│ Phase 5  │
-│ RESEARCH  │  │ PROBE    │  │ ANALYZE  │  │ REFINE   │  │ VERIFY    │  │ REPORT   │
-│ Deep SOTA │  │ Run E2E  │  │ Find gap │  │ Fix it   │  │ Keep or   │  │ Summary  │
-│ research  │  │ probes   │  │ root     │  │ with TDD │  │ discard   │  │          │
-└──────────┘  └─────────┘  │ cause    │  │          │  └──────────┘  └─────────┘
-                    ▲        └─────────┘  └─────────┘       │
-                    │                                        │
-                    └──── LOOP BACK (if features still fail) ┘
+┌──────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌──────────┐ ┌─────────┐
+│ Phase 0   │▶│ Phase 1  │▶│ Phase 2  │▶│ Phase 3  │▶│ Phase 4  │▶│ Phase 5   │▶│ Phase 6  │
+│ RESEARCH  │ │ PROBE    │ │ ANALYZE  │ │ PLAN     │ │ EVOLVE   │ │ VERIFY    │ │ REPORT   │
+│ Deep SOTA │ │ Run E2E  │ │ Find gap │ │ Tasks +  │ │ Fix it   │ │ Keep or   │ │ Summary  │
+│ research  │ │ probes   │ │ root     │ │ ACs/DoDs │ │ with TDD │ │ discard   │ │          │
+└──────────┘ └─────────┘ │ cause    │ └─────────┘ └─────────┘ └──────────┘ └─────────┘
+                   ▲       └─────────┘                              │
+                   │                                                │
+                   └─────── LOOP BACK (if features still fail) ─────┘
 ```
 
 Each phase has:
-- **Quality gates** (score >= 0.7 to advance, phases 2-4)
+- **Quality gates** (score >= 0.7 to advance, phases 2-5)
 - **Hard blocks** (evidence required)
 - **Max iterations** (timeout advances to next phase)
 - **Deterministic probes** (probe scripts, not ad-hoc LLM checks)
@@ -102,18 +104,18 @@ sota-evolution-loop/
 │   ├── sota-researcher.md   # Phase 0 — deep SOTA research
 │   ├── e2e-prober.md        # Phase 1 — run deterministic probes
 │   ├── gap-analyzer.md      # Phase 2 — weighted scoring algorithm
-│   ├── hypothesis-generator.md  # Phase 3 — validated hypothesis
-│   ├── implementation-coder.md  # Phase 3 — apply fix with TDD
-│   ├── evolution-verifier.md # Phase 4 — baseline comparison + DISCARD
+│   ├── hypothesis-generator.md  # Phase 4 — validated hypothesis
+│   ├── implementation-coder.md  # Phase 4 — apply fix with TDD
+│   ├── evolution-verifier.md # Phase 5 — baseline comparison + DISCARD
 │   ├── quality-evaluator.md # Gates — score phases with verification
-│   └── report-writer.md     # Phase 5 — final report
+│   └── report-writer.md     # Phase 6 — final report
 ├── templates/
 │   └── sota-prompt.md       # Main autonomous agent prompt
 ├── scripts/
 │   ├── setup-sota-loop.sh   # Initialization script
 │   └── probe-runner.sh      # Deterministic probe execution
 ├── tests/
-│   └── test-hook-logic.sh   # 53 tests for hook logic
+│   └── test-hook-logic.sh   # 79 tests for hook logic
 └── README.md
 ```
 
@@ -144,9 +146,10 @@ sota-output/
 │   ├── summary.json   # Overall pass/fail/skip counts
 │   └── *.json         # Per-feature probe results
 ├── analysis/          # Phase 2 gap analysis reports
+├── plans/             # Phase 3 evolution plans
 ├── baselines/         # Pre-fix snapshots for comparison
 │   ├── baseline-*.json
-│   └── stash-ref-*.txt
+│   └── head-ref-*.txt
 ├── progress/
 │   └── history.jsonl  # Every iteration logged
 └── report/
@@ -162,14 +165,16 @@ The stop-hook reads configuration from `.claude/sota-loop.local.md`:
 | max_refinement_cycles | 500 | Max times the loop restarts |
 | max_global_iterations | 10000 | Hard iteration cap |
 | budget_usd | 0 (unlimited) | Hard cost cap |
-| quality_threshold | 0.7 | Min score to advance phase |
+
+> Note: The quality gate threshold (0.7) is defined in the quality-evaluator
+> agent rubric, not as a configurable parameter in the state file.
 
 ## Tests
 
 ```bash
 bash tests/test-hook-logic.sh
-# 53/53 tests: state reading, markers, advancement, loop-back,
-# stall detection, baselines, rollback, completion promise
+# 79 tests: state reading, markers, advancement, loop-back,
+# stall detection, baselines, rollback, budget, skip tracking
 ```
 
 ## License

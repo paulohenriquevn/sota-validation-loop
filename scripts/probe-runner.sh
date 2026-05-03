@@ -38,27 +38,30 @@ write_result() {
   local duration_ms="$4"
 
   TOTAL=$((TOTAL + 1))
+  local color="$NC"
   case "$status" in
     pass) PASS=$((PASS + 1)); color="$GREEN" ;;
     fail) FAIL=$((FAIL + 1)); color="$RED" ;;
     skip) SKIP=$((SKIP + 1)); color="$YELLOW" ;;
+    *)    color="$NC" ;;
   esac
 
   echo -e "${color}[$status]${NC} $feature_id: $message (${duration_ms}ms)"
 
+  # Pass values via argv to avoid shell injection in Python
   python3 -c "
-import json, os, time
+import json, os, sys, time
 result = {
-    'feature_id': '$feature_id',
-    'status': '$status',
-    'message': '''$message''',
-    'duration_ms': $duration_ms,
+    'feature_id': sys.argv[1],
+    'status': sys.argv[2],
+    'message': sys.argv[3],
+    'duration_ms': int(sys.argv[4]),
     'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
 }
-outfile = os.path.join('$OUTPUT_DIR', '${feature_id}.json')
+outfile = os.path.join(sys.argv[5], sys.argv[1] + '.json')
 with open(outfile, 'w') as f:
     json.dump(result, f, indent=2)
-"
+" "$feature_id" "$status" "$message" "$duration_ms" "$OUTPUT_DIR"
 }
 
 # -------------------------------------------------------------------
@@ -78,6 +81,9 @@ run_probe() {
   local start_ms
   start_ms=$(date +%s%3N 2>/dev/null || python3 -c "import time; print(int(time.time()*1000))")
 
+  # SECURITY INVARIANT: $cmd MUST be a string literal defined within this script.
+  # Never pass user input, LLM output, or external data as $cmd.
+  # Trust model: this script runs on the user's own project with their permissions.
   local output=""
   local exit_code=0
   output=$(cd "$PROJECT_ROOT" && eval "$cmd" 2>&1) || exit_code=$?
@@ -229,27 +235,35 @@ probe_cli() {
     "cargo build -p theo 2>&1" \
     ""
 
-  local THEO_BIN="./target/debug/theo"
+  # Use discovered binary from outer scope
+  local CLI_BIN="${THEO_BIN}"
+  if [ -z "$CLI_BIN" ] || [ ! -x "$CLI_BIN" ]; then
+    CLI_BIN="$PROJECT_ROOT/target/debug/theo"
+  fi
+  if [ ! -x "$CLI_BIN" ]; then
+    run_probe "cli.binary_available" "" "" "no theo binary found — run cargo build -p theo first"
+    return
+  fi
 
   # All 17 subcommands must appear in --help
   run_probe "cli.help_lists_all" \
-    "$THEO_BIN --help 2>&1" \
+    "$CLI_BIN --help 2>&1" \
     "init.*agent.*pilot.*context"
 
   # Test each critical subcommand
   for cmd in init context impact stats memory dashboard subagent checkpoints agents mcp skill trajectory help; do
     run_probe "cli.${cmd}_help" \
-      "$THEO_BIN $cmd --help 2>&1" \
+      "$CLI_BIN $cmd --help 2>&1" \
       ""
   done
 
   # Special: pilot and agent may need more args, just check they don't panic
   run_probe "cli.pilot_help" \
-    "$THEO_BIN pilot --help 2>&1" \
+    "$CLI_BIN pilot --help 2>&1" \
     ""
 
   run_probe "cli.agent_help" \
-    "$THEO_BIN agent --help 2>&1" \
+    "$CLI_BIN agent --help 2>&1" \
     ""
 }
 
@@ -497,7 +511,7 @@ probe_memory() {
 
     run_probe "memory.infra_crate_tests" \
       "cargo test -p theo-infra-memory --lib --tests --no-fail-fast 2>&1" \
-      "test result"
+      "test result: ok"
 
     # RM3a: BuiltinMemoryProvider
     run_probe "memory.builtin_provider" \
@@ -634,11 +648,11 @@ probe_quality_gates() {
     ""
 
   run_probe "gates.check_unwrap" \
-    "make check-unwrap 2>&1 || true" \
+    "make check-unwrap 2>&1" \
     ""
 
   run_probe "gates.check_unsafe" \
-    "make check-unsafe 2>&1 || true" \
+    "make check-unsafe 2>&1" \
     ""
 
   run_probe "gates.sota_dod_quick" \
@@ -775,11 +789,12 @@ probe_e2e() {
   # We test in a temp dir to avoid modifying the real project
   local TEMP_INIT_DIR
   TEMP_INIT_DIR=$(mktemp -d)
+  # Ensure cleanup on any exit path
+  trap 'rm -rf "$TEMP_INIT_DIR" 2>/dev/null || true' RETURN
   cp -r "$PROJECT_ROOT/.git" "$TEMP_INIT_DIR/.git" 2>/dev/null || true
   run_probe "e2e.init_creates_config" \
-    "cd $TEMP_INIT_DIR && $THEO_BIN init --repo . 2>&1; test -f .theo/theo.md && echo 'INIT_OK' || echo 'INIT_FAILED'" \
+    "cd \"$TEMP_INIT_DIR\" && $THEO_BIN init --repo . 2>&1; test -f .theo/theo.md && echo 'INIT_OK' || echo 'INIT_FAILED'" \
     "INIT_OK"
-  rm -rf "$TEMP_INIT_DIR"
 
   # --- headless single-shot: agent executes a real task ---
   run_probe "e2e.headless_single_shot" \
@@ -859,20 +874,20 @@ echo "SUMMARY: $PASS pass / $FAIL fail / $SKIP skip / $TOTAL total"
 echo "============================================"
 
 python3 -c "
-import json, time
+import json, sys, time
 summary = {
-    'total': $TOTAL,
-    'pass': $PASS,
-    'fail': $FAIL,
-    'skip': $SKIP,
-    'category': '$CATEGORY',
+    'total': int(sys.argv[1]),
+    'pass': int(sys.argv[2]),
+    'fail': int(sys.argv[3]),
+    'skip': int(sys.argv[4]),
+    'category': sys.argv[5],
     'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-    'project_root': '$PROJECT_ROOT'
+    'project_root': sys.argv[6]
 }
-with open('$OUTPUT_DIR/summary.json', 'w') as f:
+with open(sys.argv[7], 'w') as f:
     json.dump(summary, f, indent=2)
 print(json.dumps(summary, indent=2))
-"
+" "$TOTAL" "$PASS" "$FAIL" "$SKIP" "$CATEGORY" "$PROJECT_ROOT" "$OUTPUT_DIR/summary.json"
 
 # Exit with failure if any probes failed
 if [ "$FAIL" -gt 0 ]; then

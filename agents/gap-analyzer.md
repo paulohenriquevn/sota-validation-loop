@@ -71,6 +71,17 @@ from `.claude/agents/` for SOTA-aligned insight:
 
 Map the failing feature's category to its architect (see `sota-prompt.md` architect table).
 
+## Handling Skipped Features (E2E Not Validated)
+
+When a feature has status `skip` (e.g., E2E probes skipped due to missing OAuth):
+- **Skipped features are NOT validated** — they block SOTA declaration.
+- The hook will prevent the loop from completing while skip > 0.
+- If the skip is due to missing OAuth, note this in the analysis — the fix is
+  operational (user needs to run `theo login`), not a code change.
+- If the skip is due to missing infrastructure (Docker, LSP), document the
+  dependency and flag it as requiring manual resolution.
+- **NEVER** treat skip as "probably passing" — if it wasn't tested, it's not validated.
+
 ## Handling Missing Features
 
 When a feature has status `untested` or `fail` because the CODE DOES NOT EXIST:
@@ -108,11 +119,14 @@ When a feature has status `untested` or `fail` because the CODE DOES NOT EXIST:
 - **Verified**: `ls crates/theo-application/src/memory/` — directory exists: YES/NO
 
 ### Feature Status Summary
-| Category | Total | Pass | Fail | Skip | Untested |
-|----------|-------|------|------|------|----------|
-| tools    | 47    | 30   | 5    | 2    | 10       |
-| memory   | 9     | 0    | 3    | 0    | 6        |
-| ...      |       |      |      |      |          |
+| Category | Total | Pass | Fail | Skip (NOT validated) | Untested |
+|----------|-------|------|------|----------------------|----------|
+| tools    | 47    | 30   | 5    | 2                    | 10       |
+| memory   | 9     | 0    | 3    | 0                    | 6        |
+| e2e      | 12    | 0    | 0    | 12                   | 0        |
+| ...      |       |      |      |                      |          |
+
+**⚠️ Skip count**: N features skipped — these block SOTA declaration.
 
 <!-- PHASE_2_COMPLETE -->
 ```

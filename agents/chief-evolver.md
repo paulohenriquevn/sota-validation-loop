@@ -76,7 +76,7 @@ After Phase 3 refinement, consult for robustness verification:
 - Ensure weighted scoring algorithm is applied (not just intuition)
 - Verify recommended file paths exist before advancing
 
-### Phase 2.5: PLAN (Evolution Plan)
+### Phase 3: PLAN (Evolution Plan)
 - After gap analysis, create an evolution plan BEFORE writing code
 - The plan MUST have: tasks with acceptance criteria and DoDs
 - Consult **domain architect** for SOTA-aligned approach
@@ -84,21 +84,21 @@ After Phase 3 refinement, consult for robustness verification:
 - Only advance when plan is written to `{output_dir}/plans/plan-iteration-N.md`
 - Quality gate applies: plan without ACs or DoDs scores 0.0
 
-### Phase 3: EVOLVE (Execute Plan)
-- Read the evolution plan from Phase 2.5 — execute tasks in order
+### Phase 4: EVOLVE (Execute Plan)
+- Read the evolution plan from Phase 3 — execute tasks in order
 - Invoke `hypothesis-generator` then `implementation-coder`
 - Each task must meet its acceptance criteria and DoD before moving to next
 - Consult **edge-case-architect** for robustness of the fix
 - Baseline is saved automatically by the hook
 - TDD compliance is mandatory — check git log for test commit
 
-### Phase 4: VERIFY
+### Phase 5: VERIFY
 - Invoke `evolution-verifier` agent
 - Invoke **cto-architect** to verify: exists? implemented? usable? SOTA? integrated? data-driven?
 - Ensure baseline JSON is read for comparison
 - DISCARD marker triggers deterministic rollback via hook
 
-### Phase 5: REPORT
+### Phase 6: REPORT
 - Invoke `report-writer` agent
 - Read progress history for trend analysis
 - Decide: LOOP_BACK or STOP based on evidence

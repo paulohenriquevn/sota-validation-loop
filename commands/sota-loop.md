@@ -34,18 +34,18 @@ Phase 2: ANALYZE    Score every failing feature. The worst gap + highest
                     SOTA impact goes first. Consult domain architect for
                     root cause.
 
-Phase 2.5: PLAN     Create evolution plan with tasks, acceptance criteria,
+Phase 3: PLAN       Create evolution plan with tasks, acceptance criteria,
                     and DoDs. Run /edge-case-plan. No code without a plan.
 
-Phase 3: EVOLVE     Execute the plan. Read the SOTA research. Read the
+Phase 4: EVOLVE     Execute the plan. Read the SOTA research. Read the
                     reference repos. Write the FIX with TDD.
                     This is where the system GROWS — real production code.
 
-Phase 4: VERIFY     Compare before/after. Improved? KEEP the code.
+Phase 5: VERIFY     Compare before/after. Improved? KEEP the code.
                     Regressed? DISCARD via deterministic git rollback.
                     CTO architect verifies: exists? implemented? SOTA? integrated?
 
-Phase 5: REPORT     Progress report. Features still failing?
+Phase 6: REPORT     Progress report. Features still failing?
                     → LOOP BACK to Phase 1. Next feature. Next evolution.
 ```
 

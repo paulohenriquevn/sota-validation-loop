@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "sota-evolution-loop",
-      "description": "Autonomous loop that evolves ALL features toward evidence-based SOTA thresholds. 6-phase pipeline (research, probe, analyze, plan, evolve, verify, report) with TDD, real system testing via OAuth, quality gates, keep/discard pattern, and loop-back for iterative improvement.",
+      "description": "Autonomous loop that evolves ALL features toward evidence-based SOTA thresholds. 7-phase pipeline (research, probe, analyze, plan, evolve, verify, report) with TDD, real system testing via OAuth, quality gates, keep/discard pattern, and loop-back for iterative improvement.",
       "source": {
         "source": "github",
         "repo": "paulohenriquevn/sota-evolution-loop"

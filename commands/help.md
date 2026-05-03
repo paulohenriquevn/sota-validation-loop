@@ -15,16 +15,16 @@ tests, modules) to close every gap. Feature by feature, crate by crate.
 
 **The target is SOTA. "Working" is not enough.**
 
-## 6-Phase Evolution Cycle
+## 7-Phase Evolution Cycle (Phases 0–6)
 
 ```
 Phase 0: RESEARCH  → Read docs/pesquisas/, consult domain architects, 95% confidence
 Phase 1: PROBE     → Run deterministic probes against ALL features
 Phase 2: ANALYZE   → Weighted scoring, root cause at file:line, consult domain architect
-Phase 2.5: PLAN    → Evolution plan with tasks, acceptance criteria, DoDs, edge cases
-Phase 3: EVOLVE    → Execute plan: read SOTA research + reference repos → TDD fix
-Phase 4: VERIFY    → Compare before/after → KEEP or DISCARD (git rollback)
-Phase 5: REPORT    → Progress report → LOOP BACK if features still failing
+Phase 3: PLAN      → Evolution plan with tasks, acceptance criteria, DoDs, edge cases
+Phase 4: EVOLVE    → Execute plan: read SOTA research + reference repos → TDD fix
+Phase 5: VERIFY    → Compare before/after → KEEP or DISCARD (git rollback)
+Phase 6: REPORT    → Progress report → LOOP BACK if features still failing
 
 Loop-back: features failing → return to Phase 1 → next worst feature
 Stop: ALL DOD-gates pass | stall (2 cycles, 0 progress) | budget exhausted
@@ -91,11 +91,11 @@ I/O tests, SOTA DoD (quick and full).
 | `sota-researcher` | 0 | Deep SOTA research via domain architects + papers |
 | `e2e-prober` | 1 | Runs deterministic probe scripts |
 | `gap-analyzer` | 2 | Weighted scoring + domain architect consultation |
-| `hypothesis-generator` | 3 | SOTA-grounded fix proposal |
-| `implementation-coder` | 3 | Writes production Rust with TDD |
-| `evolution-verifier` | 4 | Baseline comparison, KEEP/DISCARD |
+| `hypothesis-generator` | 4 | SOTA-grounded fix proposal from evolution plan |
+| `implementation-coder` | 4 | Writes production Rust with TDD |
+| `evolution-verifier` | 5 | Baseline comparison, KEEP/DISCARD |
 | `quality-evaluator` | Gates | Scores phases 0.0-1.0, repeats if < 0.7 |
-| `report-writer` | 5 | Final report with trends |
+| `report-writer` | 6 | Final report with trends |
 
 ## Output Structure
 
@@ -112,5 +112,5 @@ sota-output/
 ## Tests
 
 ```bash
-bash tests/test-hook-logic.sh  # 53 tests
+bash tests/test-hook-logic.sh  # 79 tests
 ```

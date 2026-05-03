@@ -13,10 +13,10 @@ Check if the loop is active:
 test -f .claude/sota-loop.local.md && echo "ACTIVE" || echo "NOT_ACTIVE"
 ```
 
-If active, read and display the current state:
+If active, read and display the current state (frontmatter only):
 
 ```!
-head -25 .claude/sota-loop.local.md 2>/dev/null
+awk '/^---$/{n++; if(n==2) exit; next} n==1{print}' .claude/sota-loop.local.md 2>/dev/null
 ```
 
 Show feature evolution summary:

@@ -30,7 +30,7 @@ NC='\033[0m'
 setup_test_dir() {
   TEST_WORKDIR=$(mktemp -d)
   mkdir -p "$TEST_WORKDIR/.claude"
-  mkdir -p "$TEST_WORKDIR/sota-output"/{research,probes,analysis,baselines,progress,report}
+  mkdir -p "$TEST_WORKDIR/sota-output"/{research,probes,analysis,plans,baselines,progress,report}
   cd "$TEST_WORKDIR"
   git init -q 2>/dev/null || true
   git config user.email "test@test.com" 2>/dev/null || true
@@ -80,10 +80,13 @@ max_refinement_cycles: 5
 features_total: 10
 features_passing: $features_passing
 features_failing: $features_failing
+features_skip: 0
 budget_usd: 50
 spent_usd: 5.0
 thresholds_path: "docs/sota-thresholds.toml"
 feature_registry_path: "docs/feature-registry.toml"
+stall_detected: false
+baseline_global_iter: ""
 ---
 Test prompt content
 EOF
@@ -215,8 +218,8 @@ test_phase_completion_markers() {
   output="<!-- FEATURES_STATUS:total=196,passing=42,failing=3 -->"
   local total passing failing
   total=$(echo "$output" | grep -oP '<!-- FEATURES_STATUS:total=\K[0-9]+' | head -1)
-  passing=$(echo "$output" | grep -oP 'passing=\K[0-9]+' | head -1)
-  failing=$(echo "$output" | grep -oP 'failing=\K[0-9]+' | head -1)
+  passing=$(echo "$output" | grep -oP '<!-- FEATURES_STATUS:[^-]*passing=\K[0-9]+' | head -1)
+  failing=$(echo "$output" | grep -oP '<!-- FEATURES_STATUS:[^-]*failing=\K[0-9]+' | head -1)
   assert_eq "extracts total" "196" "$total"
   assert_eq "extracts passing" "42" "$passing"
   assert_eq "extracts failing" "3" "$failing"
@@ -262,7 +265,7 @@ test_phase_advancement() {
   local next_phase=$current
 
   if [ "$phase_complete" = true ]; then
-    if [ "$current" -ge 2 ] && [ "$current" -le 4 ]; then
+    if [ "$current" -ge 2 ] && [ "$current" -le 5 ]; then
       if [ "$quality_passed" = "1" ]; then
         next_phase=$((current + 1))
       fi
@@ -274,7 +277,7 @@ test_phase_advancement() {
   quality_passed="0"
   next_phase=$current
   if [ "$phase_complete" = true ]; then
-    if [ "$current" -ge 2 ] && [ "$current" -le 4 ]; then
+    if [ "$current" -ge 2 ] && [ "$current" -le 5 ]; then
       if [ "$quality_passed" = "0" ]; then
         next_phase=$current  # repeat
       fi
@@ -282,11 +285,36 @@ test_phase_advancement() {
   fi
   assert_eq "repeats phase on quality fail" "2" "$next_phase"
 
+  # Phase 5 (verify) complete + quality passed → advance
+  current=5
+  quality_passed="1"
+  next_phase=$current
+  if [ "$phase_complete" = true ]; then
+    if [ "$current" -ge 2 ] && [ "$current" -le 5 ]; then
+      if [ "$quality_passed" = "1" ]; then
+        next_phase=$((current + 1))
+      fi
+    fi
+  fi
+  assert_eq "advances phase 5 on quality pass" "6" "$next_phase"
+
+  # Phase 5 (verify) complete + quality failed → repeat
+  quality_passed="0"
+  next_phase=$current
+  if [ "$phase_complete" = true ]; then
+    if [ "$current" -ge 2 ] && [ "$current" -le 5 ]; then
+      if [ "$quality_passed" = "0" ]; then
+        next_phase=$current  # repeat
+      fi
+    fi
+  fi
+  assert_eq "repeats phase 5 on quality fail" "5" "$next_phase"
+
   # Phase 1 (no quality gate) → advance
   current=1
   next_phase=$current
   if [ "$phase_complete" = true ]; then
-    if [ "$current" -ge 2 ] && [ "$current" -le 4 ]; then
+    if [ "$current" -ge 2 ] && [ "$current" -le 5 ]; then
       next_phase=$current
     else
       next_phase=$((current + 1))
@@ -490,6 +518,73 @@ else:
 ")
   assert_eq "no stall when progress made" "false" "$stall"
 
+  # Phase 5 stall detection — auto loop-back skips Phase 6, so stall
+  # must also be detectable via Phase 5 entries with phase_complete flag
+  python3 -c "
+import json
+entries = [
+    {'iteration': 5, 'phase': 5, 'cycle': 0, 'phase_complete': True, 'features_passing': 10},
+    {'iteration': 10, 'phase': 5, 'cycle': 1, 'phase_complete': True, 'features_passing': 10},
+]
+with open('$progress_file', 'w') as f:
+    for e in entries:
+        f.write(json.dumps(e) + '\n')
+"
+
+  stall=$(python3 -c "
+import json
+entries = []
+with open('$progress_file') as f:
+    for line in f:
+        entries.append(json.loads(line.strip()))
+cycle_results = {}
+for e in entries:
+    if e.get('phase') in (5, 6) and (e.get('phase') == 6 or e.get('phase_complete')):
+        cycle_results[e['cycle']] = e['features_passing']
+cycles = sorted(cycle_results.keys())
+if len(cycles) >= 2:
+    if cycle_results[cycles[-1]] <= cycle_results[cycles[-2]]:
+        print('true')
+    else:
+        print('false')
+else:
+    print('false')
+")
+  assert_eq "detects stall via Phase 5 path (auto loop-back)" "true" "$stall"
+
+  # Phase 5 with improvement → no stall
+  python3 -c "
+import json
+entries = [
+    {'iteration': 5, 'phase': 5, 'cycle': 0, 'phase_complete': True, 'features_passing': 10},
+    {'iteration': 10, 'phase': 5, 'cycle': 1, 'phase_complete': True, 'features_passing': 14},
+]
+with open('$progress_file', 'w') as f:
+    for e in entries:
+        f.write(json.dumps(e) + '\n')
+"
+
+  stall=$(python3 -c "
+import json
+entries = []
+with open('$progress_file') as f:
+    for line in f:
+        entries.append(json.loads(line.strip()))
+cycle_results = {}
+for e in entries:
+    if e.get('phase') in (5, 6) and (e.get('phase') == 6 or e.get('phase_complete')):
+        cycle_results[e['cycle']] = e['features_passing']
+cycles = sorted(cycle_results.keys())
+if len(cycles) >= 2:
+    if cycle_results[cycles[-1]] <= cycle_results[cycles[-2]]:
+        print('true')
+    else:
+        print('false')
+else:
+    print('false')
+")
+  assert_eq "no stall via Phase 5 when progress made" "false" "$stall"
+
   teardown_test_dir
 }
 
@@ -599,7 +694,7 @@ test_agent_files() {
 }
 
 # ===================================================================
-# TEST: Phase names array covers 0-5
+# TEST: Phase names array covers 0-6
 # ===================================================================
 test_phase_names() {
   echo "=== Phase Names ==="
@@ -611,6 +706,275 @@ test_phase_names() {
   assert_eq "phase 4 = evolve" "evolve" "${names[4]}"
   assert_eq "phase 5 = verify" "verify" "${names[5]}"
   assert_eq "phase 6 = report" "report" "${names[6]}"
+}
+
+# ===================================================================
+# TEST: Budget enforcement
+# ===================================================================
+test_budget_enforcement() {
+  echo "=== Budget Enforcement ==="
+
+  # Budget exceeded → should stop
+  local spent="50.0"
+  local budget="50"
+  local exceeded
+  exceeded=$(SPENT="$spent" BUDGET="$budget" python3 -c "
+import os
+spent = float(os.environ['SPENT'])
+budget = float(os.environ['BUDGET'])
+print('true' if budget > 0 and spent >= budget else 'false')
+")
+  assert_eq "stops when budget exhausted" "true" "$exceeded"
+
+  # Budget not exceeded → continue
+  spent="25.0"
+  exceeded=$(SPENT="$spent" BUDGET="$budget" python3 -c "
+import os
+spent = float(os.environ['SPENT'])
+budget = float(os.environ['BUDGET'])
+print('true' if budget > 0 and spent >= budget else 'false')
+")
+  assert_eq "continues when budget remaining" "false" "$exceeded"
+
+  # Budget unlimited (0) → continue
+  budget="0"
+  spent="999.0"
+  exceeded=$(SPENT="$spent" BUDGET="$budget" python3 -c "
+import os
+spent = float(os.environ['SPENT'])
+budget = float(os.environ['BUDGET'])
+print('true' if budget > 0 and spent >= budget else 'false')
+")
+  assert_eq "continues when budget unlimited" "false" "$exceeded"
+}
+
+# ===================================================================
+# TEST: Baseline HEAD rollback uses saved ref
+# ===================================================================
+test_baseline_head_rollback() {
+  echo "=== Baseline HEAD Rollback ==="
+  setup_test_dir
+
+  # Create a baseline HEAD ref file
+  local head_ref
+  head_ref=$(git rev-parse HEAD)
+  mkdir -p sota-output/baselines
+  echo "$head_ref" > "sota-output/baselines/head-ref-iter-1.txt"
+
+  # Verify the saved ref is a valid git object
+  local is_valid
+  if git cat-file -t "$head_ref" >/dev/null 2>&1; then
+    is_valid="true"
+  else
+    is_valid="false"
+  fi
+  assert_eq "baseline HEAD ref is valid git object" "true" "$is_valid"
+
+  # Make a change and commit
+  echo "modified" > file.txt
+  git add file.txt && git commit -q -m "modify" 2>/dev/null
+
+  # Rollback using baseline HEAD (simulates DISCARD logic)
+  git checkout "$head_ref" -- . 2>/dev/null
+  local content
+  content=$(cat file.txt)
+  assert_eq "rollback restores file to baseline state" "test" "$content"
+
+  teardown_test_dir
+}
+
+# ===================================================================
+# TEST: Skip count in FEATURES_STATUS marker
+# ===================================================================
+test_skip_count_marker() {
+  echo "=== Skip Count Marker Detection ==="
+
+  local output="<!-- FEATURES_STATUS:total=196,passing=42,failing=3,skip=12 -->"
+
+  local total passing failing skip
+  total=$(echo "$output" | grep -oP '<!-- FEATURES_STATUS:total=\K[0-9]+' | head -1)
+  passing=$(echo "$output" | grep -oP '<!-- FEATURES_STATUS:[^-]*passing=\K[0-9]+' | head -1)
+  failing=$(echo "$output" | grep -oP '<!-- FEATURES_STATUS:[^-]*failing=\K[0-9]+' | head -1)
+  skip=$(echo "$output" | grep -oP '<!-- FEATURES_STATUS:[^-]*skip=\K[0-9]+' | head -1)
+  assert_eq "extracts total with skip" "196" "$total"
+  assert_eq "extracts passing with skip" "42" "$passing"
+  assert_eq "extracts failing with skip" "3" "$failing"
+  assert_eq "extracts skip count" "12" "$skip"
+
+  # Backward compatibility: marker without skip= → skip stays default
+  output="<!-- FEATURES_STATUS:total=196,passing=42,failing=3 -->"
+  skip=$(echo "$output" | grep -oP '<!-- FEATURES_STATUS:[^-]*skip=\K[0-9]+' | head -1 || echo "")
+  assert_eq "no skip in marker returns empty" "" "$skip"
+}
+
+# ===================================================================
+# TEST: Skip count in state file
+# ===================================================================
+test_skip_state_reading() {
+  echo "=== Skip State File Reading ==="
+  setup_test_dir
+
+  cat > ".claude/sota-loop.local.md" << 'EOF'
+---
+active: true
+topic: "Test"
+current_phase: 1
+phase_name: "probe"
+phase_iteration: 1
+global_iteration: 1
+max_global_iterations: 30
+completion_promise: "All features passing"
+started_at: "2026-01-01T00:00:00Z"
+output_dir: "./sota-output"
+refinement_cycles: 0
+max_refinement_cycles: 5
+features_total: 196
+features_passing: 42
+features_failing: 3
+features_skip: 12
+budget_usd: 50
+spent_usd: 5.0
+thresholds_path: "docs/sota-thresholds.toml"
+feature_registry_path: "docs/feature-registry.toml"
+---
+Test prompt content
+EOF
+
+  assert_eq "reads features_skip" "12" "$(read_state features_skip)"
+
+  teardown_test_dir
+}
+
+# ===================================================================
+# TEST: SOTA blocked when skip > 0 (completion promise not fulfilled)
+# ===================================================================
+test_sota_blocked_by_skip() {
+  echo "=== SOTA Blocked by Skip ==="
+
+  # Simulate: completion promise found but skip > 0 → should NOT complete
+  local promise="All features passing"
+  local output="Final report: All features passing! Done."
+  local features_skip=12
+
+  local should_block=false
+  if echo "$output" | grep -qF "$promise"; then
+    if [ "$features_skip" -gt 0 ] 2>/dev/null; then
+      should_block=true
+    fi
+  fi
+  assert_eq "blocks SOTA when skip > 0" "true" "$should_block"
+
+  # skip = 0 → should complete
+  features_skip=0
+  should_block=false
+  if echo "$output" | grep -qF "$promise"; then
+    if [ "$features_skip" -gt 0 ] 2>/dev/null; then
+      should_block=true
+    fi
+  fi
+  assert_eq "allows SOTA when skip = 0" "false" "$should_block"
+}
+
+# ===================================================================
+# TEST: Auto loop-back when skip > 0 and failing = 0
+# ===================================================================
+test_auto_loop_back_on_skip() {
+  echo "=== Auto Loop-Back on Skip ==="
+
+  local next_phase=7
+  local features_failing=0
+  local features_skip=12
+  local cycles=1
+  local max_cycles=5
+  local stall=false
+
+  # Simulates the hook logic for next_phase > 6
+  if [ "$next_phase" -gt 6 ]; then
+    if [ "$features_failing" -gt 0 ] && [ "$cycles" -lt "$max_cycles" ]; then
+      next_phase=1
+      cycles=$((cycles + 1))
+    elif [ "$features_skip" -gt 0 ] 2>/dev/null && [ "$cycles" -lt "$max_cycles" ]; then
+      if [ "$stall" = true ]; then
+        next_phase=6
+      else
+        next_phase=1
+        cycles=$((cycles + 1))
+      fi
+    else
+      next_phase=6
+    fi
+  fi
+  assert_eq "loops back when skip > 0 and failing = 0" "1" "$next_phase"
+  assert_eq "increments cycle on skip loop-back" "2" "$cycles"
+
+  # No skip, no failing → done
+  next_phase=7
+  features_skip=0
+  features_failing=0
+  cycles=1
+  if [ "$next_phase" -gt 6 ]; then
+    if [ "$features_failing" -gt 0 ] && [ "$cycles" -lt "$max_cycles" ]; then
+      next_phase=1
+    elif [ "$features_skip" -gt 0 ] 2>/dev/null && [ "$cycles" -lt "$max_cycles" ]; then
+      next_phase=1
+    else
+      next_phase=6
+    fi
+  fi
+  assert_eq "completes when skip = 0 and failing = 0" "6" "$next_phase"
+}
+
+# ===================================================================
+# TEST: System message includes skip count
+# ===================================================================
+test_system_message_skip() {
+  echo "=== System Message Skip Count ==="
+
+  local features_passing=42
+  local features_total=196
+  local features_failing=3
+  local features_skip=12
+
+  local msg="Features: ${features_passing}/${features_total} passing, ${features_failing} failing, ${features_skip} skip"
+  assert_contains "system message includes skip" "12 skip" "$msg"
+
+  # Skip warning
+  local warn=""
+  if [ "$features_skip" -gt 0 ] 2>/dev/null; then
+    warn="E2E NOT VALIDATED: ${features_skip} features skipped"
+  fi
+  assert_contains "skip warning emitted" "E2E NOT VALIDATED" "$warn"
+}
+
+# ===================================================================
+# TEST: Baseline includes skip count
+# ===================================================================
+test_baseline_includes_skip() {
+  echo "=== Baseline Includes Skip ==="
+  setup_test_dir
+
+  local baseline_file="sota-output/baselines/baseline-cycle-0-iter-1.json"
+  python3 -c "
+import json, time
+baseline = {
+    'iteration': 1,
+    'cycle': 0,
+    'features_total': 196,
+    'features_passing': 31,
+    'features_failing': 4,
+    'features_skip': 12,
+    'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+    'git_head': 'abc1234'
+}
+with open('$baseline_file', 'w') as f:
+    json.dump(baseline, f, indent=2)
+"
+
+  local skip
+  skip=$(python3 -c "import json; print(json.load(open('$baseline_file'))['features_skip'])")
+  assert_eq "baseline includes features_skip" "12" "$skip"
+
+  teardown_test_dir
 }
 
 # ===================================================================
@@ -656,6 +1020,22 @@ echo ""
 test_agent_files
 echo ""
 test_phase_names
+echo ""
+test_budget_enforcement
+echo ""
+test_baseline_head_rollback
+echo ""
+test_skip_count_marker
+echo ""
+test_skip_state_reading
+echo ""
+test_sota_blocked_by_skip
+echo ""
+test_auto_loop_back_on_skip
+echo ""
+test_system_message_skip
+echo ""
+test_baseline_includes_skip
 
 echo ""
 echo "============================================"

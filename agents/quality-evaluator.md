@@ -21,7 +21,7 @@ For each phase, you MUST:
 
 ## Per-Phase Rubrics
 
-### Phase 0 (research) — 5 dimensions
+### Phase 0 (research) — 5 dimensions (informational only, no quality gate enforced by hook)
 | Dimension | Weight | What to check | How to verify |
 |-----------|--------|---------------|---------------|
 | Threshold coverage | 0.30 | Were all threshold categories audited? | Count categories in research report vs registry |
@@ -30,14 +30,19 @@ For each phase, you MUST:
 | New discoveries | 0.15 | Were new SOTA features identified? | Check "new features" section |
 | Contradiction handling | 0.10 | Were conflicting sources noted? | Grep for "contradict" or "conflict" |
 
-### Phase 1 (probe) — 5 dimensions
+### Phase 1 (probe) — 6 dimensions
 | Dimension | Weight | What to check | How to verify |
 |-----------|--------|---------------|---------------|
-| Coverage | 0.30 | % of features probed (vs untested) | Read feature registry, count statuses |
-| Accuracy | 0.25 | Did probes actually test the feature? | Read probe JSON files, check commands run |
-| Priority coverage | 0.20 | All high-priority features probed? | Filter registry by priority=high, check status |
-| Error detail | 0.15 | Do failures have actionable messages? | Read fail probe JSONs, check message field |
+| Coverage | 0.25 | % of features probed (vs untested) | Read feature registry, count statuses |
+| E2E validation | 0.20 | Were real E2E probes executed (not skipped)? | Check `skip` count in summary.json — skip > 0 means E2E not validated |
+| Accuracy | 0.20 | Did probes actually test the feature? | Read probe JSON files, check commands run |
+| Priority coverage | 0.15 | All high-priority features probed? | Filter registry by priority=high, check status |
+| Error detail | 0.10 | Do failures have actionable messages? | Read fail probe JSONs, check message field |
 | Reproducibility | 0.10 | Were probe scripts used (not ad hoc)? | Check if `{output_dir}/probes/summary.json` exists |
+
+**Note**: E2E validation dimension scores 0.0 if ALL E2E probes were skipped,
+0.5 if some were skipped, 1.0 if none skipped. This ensures the quality gate
+flags missing E2E coverage early.
 
 ### Phase 2 (analyze) — 5 dimensions
 | Dimension | Weight | What to check | How to verify |
@@ -48,7 +53,7 @@ For each phase, you MUST:
 | Impact estimation | 0.15 | Links to DOD-gate? | Check for threshold reference |
 | Evidence quality | 0.10 | Claims backed by probe data? | Cross-reference with probe JSONs |
 
-### Phase 2.5/3 (plan) — 5 dimensions
+### Phase 3 (plan) — 5 dimensions
 | Dimension | Weight | What to check | How to verify |
 |-----------|--------|---------------|---------------|
 | Tasks defined | 0.30 | Does the plan have concrete tasks (T1, T2, ...)? | Count tasks in plan file |
@@ -68,7 +73,7 @@ For each phase, you MUST:
 | Test passage | 0.15 | All tests pass? Zero clippy? | Run `cargo test -p <crate>` and `cargo clippy` |
 | No forbidden paths | 0.15 | No allowlists/CLAUDE.md changes? | Run `git diff --name-only`, check paths |
 
-### Phase 4 (verify) — 5 dimensions
+### Phase 5 (verify) — 5 dimensions
 | Dimension | Weight | What to check | How to verify |
 |-----------|--------|---------------|---------------|
 | Before/after data | 0.30 | Baseline JSON read and compared? | Check baseline file referenced |
@@ -79,10 +84,10 @@ For each phase, you MUST:
 
 ## Automatic Failures (score = 0.0)
 
-- Phase 3: Tests fail (`cargo test` exit != 0)
-- Phase 3: Clippy warnings present
-- Phase 3: Changes in forbidden paths (allowlists, CLAUDE.md, Makefile)
-- Phase 4: Regression detected and NOT reverted (no DISCARD marker)
+- Phase 4: Tests fail (`cargo test` exit != 0)
+- Phase 4: Clippy warnings present
+- Phase 4: Changes in forbidden paths (allowlists, CLAUDE.md, Makefile)
+- Phase 5: Regression detected and NOT reverted (no DISCARD marker)
 - Any phase: No evidence of work done (empty output, no artifacts)
 - Any phase: Fabricated data (probe says fail but evaluator claimed pass)
 
@@ -91,18 +96,18 @@ For each phase, you MUST:
 Run these to verify claims, don't trust the agent's self-report:
 
 ```bash
-# Phase 1: Check probe coverage
-cat {output_dir}/probes/summary.json | python3 -c "import json,sys; d=json.load(sys.stdin); print(f'{d[\"pass\"]}/{d[\"total\"]} probes passed')"
+# Phase 1: Check probe coverage and skip count
+cat {output_dir}/probes/summary.json | python3 -c "import json,sys; d=json.load(sys.stdin); print(f'{d[\"pass\"]}/{d[\"total\"]} probes passed, {d.get(\"skip\",0)} skipped (NOT validated)')"
 
-# Phase 3: Check actual test results
+# Phase 4: Check actual test results
 cargo test -p <affected-crate> --no-fail-fast 2>&1 | tail -5
 cargo clippy -p <affected-crate> -- -D warnings 2>&1 | tail -5
 
-# Phase 3: Check scope
+# Phase 4: Check scope
 git diff --stat
 git diff --name-only
 
-# Phase 4: Check baseline exists
+# Phase 5: Check baseline exists
 ls -la {output_dir}/baselines/baseline-*.json
 ```
 

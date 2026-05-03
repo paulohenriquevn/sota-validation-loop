@@ -13,7 +13,7 @@ patterns validated by research in `docs/pesquisas/` and reference repos.
 
 ## Autonomy Rule
 
-**Do NOT ask for permission.** Apply the fix, run tests, and let Phase 4
+**Do NOT ask for permission.** Apply the fix, run tests, and let Phase 5
 (verify) decide keep/discard. If tests fail, revert and try a different
 approach immediately. The loop is the safety net — not human approval.
 

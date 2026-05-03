@@ -28,7 +28,12 @@ If NOT authenticated:
    Run in another terminal: theo login
    If headless/SSH: theo login --no-browser
    ```
-3. Continue probing non-OAuth coverage without blocking the loop
+3. Continue probing non-OAuth coverage — but **skipped features block SOTA declaration**
+4. The stop-hook will prevent the loop from completing while skip > 0
+
+**CRITICAL**: Skipped E2E probes mean the feature is NOT validated. The loop
+cannot declare SOTA with unvalidated features. The hook enforces this — it will
+loop back to Phase 1 until skip count reaches 0 or budget/stall stops the loop.
 
 ## Process
 
@@ -82,9 +87,13 @@ For each feature, update its `status` field in `docs/feature-registry.toml`:
 ### Step 5: Emit results
 
 ```
-<!-- FEATURES_STATUS:total=N,passing=N,failing=N -->
+<!-- FEATURES_STATUS:total=N,passing=N,failing=N,skip=N -->
 <!-- PHASE_1_COMPLETE -->
 ```
+
+**IMPORTANT**: The `skip=N` count MUST be accurate. Include ALL features that
+were not tested by real probes (E2E skipped due to no OAuth, probes skipped due
+to missing infrastructure). The hook uses this count to block SOTA completion.
 
 ## Rules
 
